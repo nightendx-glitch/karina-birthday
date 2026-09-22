@@ -1,0 +1,1981 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Montserrat:wght@300;400;500&display=swap');
+
+
+/* =================================
+   ОСНОВА
+================================= */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+
+  background: #160608;
+
+  color: #ffffff;
+
+  font-family: "Montserrat", sans-serif;
+
+  overflow-x: hidden;
+}
+
+button,
+input {
+  font-family: inherit;
+}
+
+
+/* =================================
+   ЦВЕТА
+================================= */
+
+:root {
+  --burgundy: #5b0d18;
+  --burgundy-dark: #33070d;
+  --burgundy-light: rgba(105, 20, 32, 0.72);
+
+  --black: #050505;
+
+  --white: #ffffff;
+
+  --cream: #f7f1ed;
+}
+
+
+/* =================================
+   ОБЩИЙ САЙТ
+================================= */
+
+.birthday-site {
+  width: 100%;
+
+  background:
+    linear-gradient(
+      180deg,
+      #21080d 0%,
+      #4b0b15 40%,
+      #21080d 100%
+    );
+}
+
+
+/* =================================
+   ПЕРВЫЙ ЭКРАН
+================================= */
+
+.hero-section {
+  position: relative;
+
+  min-height: 100vh;
+
+  padding:
+    65px
+    25px
+    90px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  text-align: center;
+
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(112, 22, 38, 0.7),
+      transparent 55%
+    ),
+    #3b0911;
+}
+
+
+/* маленькая надпись */
+
+.hero-title {
+  margin-bottom: 38px;
+
+  font-size: 11px;
+
+  letter-spacing: 5px;
+
+  text-transform: uppercase;
+
+  color: rgba(255,255,255,0.85);
+
+  animation: fadeDown 1s ease both;
+}
+
+.hero-title span {
+  margin: 0 10px;
+
+  opacity: 0.6;
+}
+
+
+/* =================================
+   ГЛАВНАЯ ФОТОГРАФИЯ
+================================= */
+
+.hero-photo {
+  width: min(440px, 88vw);
+
+  height: min(590px, 68vh);
+
+  overflow: hidden;
+
+  position: relative;
+
+  animation: photoAppear 1.3s ease both;
+
+  box-shadow:
+    0 30px 80px rgba(0,0,0,0.35);
+}
+
+.hero-photo::after {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  background:
+    linear-gradient(
+      180deg,
+      transparent 65%,
+      rgba(25,4,8,0.35)
+    );
+}
+
+.hero-photo img {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  display: block;
+
+  transition:
+    transform 1.5s ease;
+}
+
+.hero-photo:hover img {
+  transform: scale(1.04);
+}
+
+
+/* =================================
+   ИМЯ
+================================= */
+
+.hero-name {
+  margin-top: -75px;
+
+  position: relative;
+
+  z-index: 2;
+}
+
+.age {
+  font-family: "Cormorant Garamond", serif;
+
+  font-size: clamp(90px, 15vw, 150px);
+
+  line-height: 0.75;
+
+  font-weight: 300;
+
+  letter-spacing: -5px;
+
+  text-shadow:
+    0 8px 30px rgba(0,0,0,0.35);
+}
+
+.name {
+  margin-top: 15px;
+
+  font-family: "Cormorant Garamond", serif;
+
+  font-size: clamp(48px, 8vw, 80px);
+
+  line-height: 1;
+
+  font-weight: 400;
+
+  letter-spacing: 2px;
+}
+
+
+/* =================================
+   ДАТА
+================================= */
+
+.hero-date {
+  margin-top: 35px;
+
+  font-size: 12px;
+
+  letter-spacing: 5px;
+
+  color: rgba(255,255,255,0.85);
+}
+
+.hero-date span {
+  margin: 0 12px;
+
+  opacity: 0.5;
+}
+
+
+/* =================================
+   ИНФО-КАРТОЧКА
+================================= */
+
+.info-card {
+  width: min(850px, 95vw);
+
+  margin-top: 55px;
+
+  padding: 25px;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, 1fr);
+
+  background:
+    rgba(99, 17, 30, 0.66);
+
+  border:
+    1px solid rgba(255,255,255,0.13);
+
+  backdrop-filter: blur(15px);
+
+  -webkit-backdrop-filter: blur(15px);
+
+  box-shadow:
+    0 20px 60px rgba(0,0,0,0.2);
+}
+
+.info-item {
+  min-height: 100px;
+
+  padding:
+    10px
+    20px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  justify-content: center;
+
+  align-items: center;
+
+  border-right:
+    1px solid rgba(255,255,255,0.14);
+}
+
+.info-item:last-child {
+  border-right: none;
+}
+
+.info-label {
+  margin-bottom: 13px;
+
+  font-size: 9px;
+
+  letter-spacing: 4px;
+
+  opacity: 0.65;
+}
+
+.info-value {
+  font-family: "Cormorant Garamond", serif;
+
+  font-size: 22px;
+
+  line-height: 1.15;
+
+  font-weight: 400;
+}
+
+
+/* =================================
+   СТРЕЛКА
+================================= */
+
+.scroll-down {
+  margin-top: 55px;
+
+  font-size: 25px;
+
+  opacity: 0.6;
+
+  animation:
+    floating 2s ease-in-out infinite;
+}
+
+
+/* =================================
+   ФОТО СЕКЦИЯ
+================================= */
+
+.photo-section {
+  background: #100305;
+
+  padding: 0;
+}
+
+.full-photo {
+  width: 100%;
+
+  height: 85vh;
+
+  overflow: hidden;
+}
+
+.full-photo img {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  display: block;
+
+  transition:
+    transform 1.5s ease;
+}
+
+.full-photo:hover img {
+  transform: scale(1.025);
+}
+
+
+/* =================================
+   DRESS CODE
+================================= */
+
+.dress-section {
+  padding: 0;
+
+  background: #21070c;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+}
+
+
+/* фото */
+
+.dress-photo {
+  width: 100%;
+
+  height: 75vh;
+
+  overflow: hidden;
+}
+
+.dress-photo img {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+
+/* бордовый блок */
+
+.dress-card {
+  width: min(700px, 88vw);
+
+  margin-top: -80px;
+
+  position: relative;
+
+  z-index: 2;
+
+  padding:
+    70px
+    45px;
+
+  text-align: center;
+
+  background:
+    rgba(93, 13, 25, 0.76);
+
+  border:
+    1px solid rgba(255,255,255,0.12);
+-webkit-backdrop-filter:blur(10px);
+  backdrop-filter: blur(14px);
+}
+
+.section-label {
+  margin-bottom: 25px;
+
+  font-family: "Cormorant Garamond", serif;
+
+  font-size: 46px;
+
+  line-height: 1;
+
+  font-weight: 400;
+}
+
+.dress-card p {
+  margin: 0;
+
+  font-family: "Cormorant Garamond", serif;
+
+  font-size: 24px;
+
+  line-height: 1.45;
+
+  color: rgba(255,255,255,0.9);
+}
+
+
+/* чёрный блок */
+
+.black-card {
+  width: min(700px, 88vw);
+
+  margin:
+    55px
+    0;
+
+  padding:
+    75px
+    30px;
+
+  text-align: center;
+
+  background: #050505;
+
+  border:
+    1px solid rgba(255,255,255,0.08);
+
+  box-shadow:
+    0 25px 70px rgba(0,0,0,0.3);
+}
+
+.black-title {
+  font-family: "Cormorant Garamond", serif;
+
+  font-size: 60px;
+
+  font-weight: 400;
+
+  letter-spacing: 2px;
+}
+
+.black-description {
+  margin-top: 20px;
+
+  font-size: 10px;
+
+  letter-spacing: 3px;
+
+  line-height: 1.7;
+
+  color: rgba(255,255,255,0.65);
+
+  text-transform: lowercase;
+}
+
+.bottom-photo {
+  margin-top: 0;
+}
+
+
+/* =================================
+   RSVP
+================================= */
+
+.rsvp-section {
+  min-height: 100vh;
+
+  padding:
+    120px
+    20px;
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  background:
+    radial-gradient(
+      circle,
+      #631522,
+      #25070d 70%
+    );
+}
+
+
+.rsvp-card {
+  width: min(700px, 92vw);
+
+  padding:
+    75px
+    50px;
+
+  text-align: center;
+
+  background:
+    rgba(91, 13, 24, 0.73);
+
+  border:
+    1px solid rgba(255,255,255,0.14);
+-webkit-backdrop-filter: blur(1opx);
+  backdrop-filter: blur(16px);
+
+  box-shadow:
+    0 30px 90px rgba(0,0,0,0.3);
+}
+
+
+.rsvp-card h2 {
+  margin:
+    0
+    0
+    40px;
+
+  font-family: "Cormorant Garamond", serif;
+
+  font-size: 65px;
+
+  font-weight: 400;
+}
+
+
+.question {
+  margin:
+    35px
+    0
+    18px;
+
+  font-family: "Cormorant Garamond", serif;
+
+  font-size: 25px;
+}
+
+
+.choice-group {
+  display: flex;
+
+  flex-wrap: wrap;
+
+  justify-content: center;
+
+  gap: 10px;
+}
+
+
+.choice-button {
+  padding:
+    14px
+    23px;
+
+  border:
+    1px solid rgba(255,255,255,0.2);
+
+  background:
+    rgba(255,255,255,0.08);
+
+  color: white;
+
+  cursor: pointer;
+
+  font-size: 11px;
+
+  transition:
+    background 0.3s ease,
+    transform 0.3s ease;
+}
+
+.choice-button:hover {
+  background:
+    rgba(255,255,255,0.18);
+
+  transform:
+    translateY(-2px);
+}
+
+
+.custom-input {
+  width: 100%;
+
+  margin-top: 15px;
+
+  padding:
+    16px
+    18px;
+
+  border:
+    1px solid rgba(255,255,255,0.18);
+
+  outline: none;
+
+  background:
+    rgba(255,255,255,0.07);
+
+  color: white;
+
+  text-align: center;
+
+  font-size: 12px;
+}
+
+.custom-input::placeholder {
+  color: rgba(255,255,255,0.55);
+}
+
+
+.submit-button {
+  width: 100%;
+
+  margin-top: 18px;
+
+  padding:
+    17px;
+
+  border: none;
+
+  background: white;
+
+  color: #4d0913;
+
+  cursor: pointer;
+
+  font-size: 11px;
+
+  letter-spacing: 1px;
+
+  transition:
+    transform 0.3s ease,
+    opacity 0.3s ease;
+}
+
+.submit-button:hover {
+  transform:
+    translateY(-2px);
+
+  opacity: 0.9;
+}
+
+
+.privacy-text {
+  margin-top: 25px;
+
+  font-family: "Cormorant Garamond", serif;
+
+  font-size: 17px;
+
+  line-height: 1.5;
+
+  color: rgba(255,255,255,0.65);
+}
+
+
+/* =================================
+   WISHLIST
+================================= */
+
+.wishlist-section {
+  padding:
+    130px
+    25px;
+
+  background:
+    #f6f0ec;
+
+  color: #35080f;
+}
+
+
+.wishlist-title {
+  text-align: center;
+
+  font-family: "Cormorant Garamond", serif;
+
+  font-size: clamp(65px, 10vw, 110px);
+
+  font-weight: 400;
+
+  line-height: 0.9;
+}
+
+
+.wishlist-description {
+  width: min(700px, 90vw);
+
+  margin:
+    70px
+    auto;
+
+  text-align: center;
+}
+
+
+.wishlist-description h2 {
+  margin-bottom: 30px;
+
+  font-family: "Cormorant Garamond", serif;
+
+  font-size: 32px;
+
+  font-weight: 400;
+}
+
+
+.wishlist-description p {
+  margin:
+    20px
+    0;
+
+  font-family: "Cormorant Garamond", serif;
+
+  font-size: 20px;
+
+  line-height: 1.6;
+
+  color: #5f4146;
+}
+
+
+/* =================================
+   ПОДАРКИ
+================================= */
+
+.gifts-grid {
+  width: min(1000px, 95vw);
+
+  margin: 0 auto;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, 1fr);
+
+  gap: 30px;
+}
+
+
+.gift-card {
+  padding:
+    20px;
+
+  background: white;
+
+  box-shadow:
+    0 15px 50px rgba(50,0,10,0.09);
+
+  text-align: center;
+
+  transition:
+    transform 0.4s ease;
+}
+
+.gift-card:hover {
+  transform:
+    translateY(-6px);
+}
+
+
+.gift-image {
+  width: 100%;
+
+  height: 330px;
+
+  overflow: hidden;
+}
+
+
+.gift-image img {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  transition:
+    transform 0.8s ease;
+}
+
+.gift-card:hover img {
+  transform:
+    scale(1.04);
+}
+
+
+.gift-name {
+  margin:
+    22px
+    0;
+
+  font-family: "Cormorant Garamond", serif;
+
+  font-size: 28px;
+}
+
+
+.gift-button {
+  padding:
+    14px
+    25px;
+
+  border:
+    1px solid #5b0d18;
+
+  background:
+    #5b0d18;
+
+  color: white;
+
+  cursor: pointer;
+
+  font-size: 10px;
+
+  letter-spacing: 1px;
+
+  transition:
+    opacity 0.3s ease;
+}
+
+.gift-button:hover {
+  opacity: 0.8;
+}
+
+
+/* =================================
+   ФИНАЛ
+================================= */
+
+.final-section {
+  position: relative;
+
+  padding-bottom: 0;
+
+  background: #180509;
+}
+
+
+.final-photo {
+  width: 100%;
+
+  height: 70vh;
+
+  overflow: hidden;
+}
+
+.final-photo img {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+
+.final-card {
+  width: min(650px, 88vw);
+
+  margin:
+    -100px
+    auto
+    0;
+
+  position: relative;
+
+  z-index: 2;
+
+  padding:
+    65px
+    35px;
+
+  text-align: center;
+
+  background:
+    rgba(91, 13, 24, 0.84);
+
+  border:
+    1px solid rgba(255,255,255,0.12);
+-webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(15px);
+}
+
+
+.final-title {
+  font-family: "Cormorant Garamond", serif;
+
+  font-size: 70px;
+
+  font-weight: 400;
+}
+
+
+.final-card p {
+  margin: 25px 0 0;
+
+  font-family: "Cormorant Garamond", serif;
+
+  font-size: 22px;
+
+  line-height: 1.5;
+
+  color: rgba(255,255,255,0.85);
+}
+
+
+/* =================================
+   АНИМАЦИИ
+================================= */
+
+@keyframes fadeDown {
+
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(-20px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0);
+  }
+
+}
+
+
+@keyframes photoAppear {
+
+  from {
+    opacity: 0;
+
+    transform:
+      scale(0.96)
+      translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      scale(1)
+      translateY(0);
+  }
+
+}
+
+
+@keyframes floating {
+
+  0%,
+  100% {
+    transform:
+      translateY(0);
+  }
+
+  50% {
+    transform:
+      translateY(10px);
+  }
+
+}
+
+
+/* =================================
+   ТЕЛЕФОН
+================================= */
+
+@media (max-width: 700px) {
+
+  .hero-section {
+    padding:
+      45px
+      15px
+      70px;
+  }
+
+
+  .hero-title {
+    font-size: 9px;
+
+    letter-spacing: 3px;
+
+    line-height: 1.8;
+  }
+
+
+  .hero-photo {
+    width: 90vw;
+
+    height: 65vh;
+  }
+
+
+  .hero-name {
+    margin-top: -55px;
+  }
+
+
+  .age {
+    font-size: 105px;
+  }
+
+
+  .name {
+    font-size: 55px;
+  }
+
+
+  .hero-date {
+    font-size: 9px;
+
+    letter-spacing: 3px;
+  }
+
+
+  .info-card {
+    grid-template-columns:
+      repeat(2, 1fr);
+
+    padding: 10px;
+  }
+
+
+  .info-item {
+    min-height: 110px;
+
+    padding: 12px;
+
+    border-right: none;
+
+    border-bottom:
+      1px solid rgba(255,255,255,0.14);
+  }
+
+
+  .info-item:nth-child(odd) {
+    border-right:
+      1px solid rgba(255,255,255,0.14);
+  }
+
+
+  .info-item:nth-child(3),
+  .info-item:nth-child(4) {
+    border-bottom: none;
+  }
+
+
+  .info-value {
+    font-size: 19px;
+  }
+
+
+  .full-photo {
+    height: 70vh;
+  }
+
+
+  .dress-photo {
+    height: 65vh;
+  }
+
+
+  .dress-card {
+    padding:
+      55px
+      25px;
+  }
+
+
+  .section-label {
+    font-size: 39px;
+  }
+
+
+  .dress-card p {
+    font-size: 20px;
+  }
+
+
+  .black-card {
+    padding:
+      65px
+      20px;
+  }
+
+
+  .black-title {
+    font-size: 48px;
+  }
+
+
+  .black-description {
+    font-size: 9px;
+
+    letter-spacing: 2px;
+  }
+
+
+  .rsvp-section {
+    padding:
+      80px
+      15px;
+  }
+
+
+  .rsvp-card {
+    padding:
+      60px
+      22px;
+  }
+
+
+  .rsvp-card h2 {
+    font-size: 52px;
+  }
+
+
+  .question {
+    font-size: 22px;
+  }
+
+
+  .choice-button {
+    width: 100%;
+  }
+
+
+  .wishlist-section {
+    padding:
+      90px
+      15px;
+  }
+
+
+  .wishlist-title {
+    font-size: 75px;
+  }
+
+
+  .wishlist-description p {
+    font-size: 19px;
+  }
+
+
+  .gifts-grid {
+    grid-template-columns:
+      1fr;
+  }
+
+
+  .gift-image {
+    height: 350px;
+  }
+
+
+  .final-photo {
+    height: 65vh;
+  }
+
+
+  .final-card {
+    padding:
+      55px
+      25px;
+  }
+
+
+  .final-title {
+    font-size: 55px;
+  }
+
+}
+/* =================================
+   ДОПОЛНИТЕЛЬНЫЕ СЕКЦИИ
+================================= */
+
+.text-section {
+  padding: 140px 20px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #25070d,
+      #4c0c17,
+      #25070d
+    );
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+
+.text-card {
+  width: min(700px, 90vw);
+
+  padding: 80px 50px;
+
+  text-align: center;
+
+  background:
+    rgba(91, 13, 24, 0.72);
+
+  border:
+    1px solid rgba(255,255,255,0.13);
+-webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(15px);
+
+  box-shadow:
+    0 30px 80px rgba(0,0,0,0.25);
+}
+
+
+.small-heading {
+  font-size: 9px;
+
+  letter-spacing: 5px;
+
+  text-transform: uppercase;
+
+  opacity: 0.6;
+
+  margin-bottom: 30px;
+}
+
+
+.text-card h2 {
+  margin: 0;
+
+  font-family: "Cormorant Garamond", serif;
+
+  font-size: clamp(45px, 7vw, 70px);
+
+  font-weight: 400;
+
+  line-height: 1.05;
+}
+
+
+.text-card p {
+  max-width: 500px;
+
+  margin: 35px auto 0;
+
+  font-family: "Cormorant Garamond", serif;
+
+  font-size: 22px;
+
+  line-height: 1.6;
+
+  color:
+    rgba(255,255,255,0.78);
+}
+
+
+.decor-line {
+  margin-top: 40px;
+
+  font-size: 22px;
+
+  opacity: 0.55;
+}
+
+
+/* =================================
+   WISHLIST NOTE
+================================= */
+
+.wishlist-note {
+  margin-top: 80px;
+
+  text-align: center;
+
+  font-family: "Cormorant Garamond", serif;
+
+  font-size: 24px;
+
+  letter-spacing: 5px;
+
+  text-transform: uppercase;
+
+  opacity: 0.45;
+}
+
+
+/* =================================
+   БЛОКИ ПОДАРКОВ
+================================= */
+
+.gift-section {
+  padding:
+    130px
+    25px;
+
+  background:
+    #f6f0ec;
+
+  color:
+    #35080f;
+
+  position: relative;
+}
+
+
+.gift-section:nth-of-type(even) {
+  background:
+    #eee4de;
+}
+
+
+/* =================================
+   ЗАГОЛОВОК БЛОКА
+================================= */
+
+.gift-section-heading {
+  width: min(1000px, 95vw);
+
+  margin:
+    0
+    auto
+    65px;
+
+  text-align: center;
+}
+
+
+.gift-number {
+  font-size: 10px;
+
+  letter-spacing: 5px;
+
+  color:
+    #8b6570;
+
+  margin-bottom: 20px;
+}
+
+
+.gift-section-title {
+  font-family:
+    "Cormorant Garamond",
+    serif;
+
+  font-size:
+    clamp(45px, 7vw, 75px);
+
+  line-height: 0.95;
+
+  font-weight: 400;
+
+  color:
+    #4c0b15;
+}
+
+
+.gift-section-subtitle {
+  margin-top: 20px;
+
+  font-size: 10px;
+
+  letter-spacing: 3px;
+
+  text-transform: uppercase;
+
+  color:
+    #8b6870;
+}
+
+
+/* =================================
+   СЕТКА ПОДАРКОВ
+================================= */
+
+.gifts-grid {
+  width:
+    min(1100px, 95vw);
+
+  margin:
+    0 auto;
+
+  display:
+    grid;
+
+  grid-template-columns:
+    repeat(2, 1fr);
+
+  gap:
+    35px;
+}
+
+
+/* =================================
+   КАРТОЧКА ПОДАРКА
+================================= */
+
+.gift-card {
+  background:
+    #ffffff;
+
+  padding:
+    18px;
+
+  text-align:
+    center;
+
+  box-shadow:
+    0 20px 60px
+    rgba(70, 20, 30, 0.08);
+
+  transition:
+    transform 0.45s ease,
+    box-shadow 0.45s ease;
+}
+
+
+.gift-card:hover {
+  transform:
+    translateY(-8px);
+
+  box-shadow:
+    0 30px 75px
+    rgba(70, 20, 30, 0.15);
+}
+
+
+/* =================================
+   ФОТО ПОДАРКА
+================================= */
+
+.gift-image {
+  position:
+    relative;
+
+  width:
+    100%;
+
+  height:
+    380px;
+
+  overflow:
+    hidden;
+
+  background:
+    #ddd;
+}
+
+
+.gift-image img {
+  width:
+    100%;
+
+  height:
+    100%;
+
+  object-fit:
+    cover;
+
+  display:
+    block;
+
+  transition:
+    transform 0.8s ease;
+}
+
+
+.gift-card:hover
+.gift-image img {
+  transform:
+    scale(1.04);
+}
+
+
+/* =================================
+   НОМЕР ПОДАРКА
+================================= */
+
+.gift-number-badge {
+  position:
+    absolute;
+
+  top:
+    15px;
+
+  left:
+    15px;
+
+  width:
+    38px;
+
+  height:
+    38px;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  background:
+    rgba(70, 5, 15, 0.78);
+
+  color:
+    white;
+
+  font-size:
+    9px;
+
+  letter-spacing:
+    1px;
+-webkit-backdrop-filter: blur(8px);
+  backdrop-filter:
+    blur(8px);
+}
+
+
+/* =================================
+   ТЕКСТ ПОДАРКА
+================================= */
+
+.gift-content {
+  padding:
+    25px
+    15px
+    12px;
+}
+
+
+.gift-name {
+  margin:
+    0;
+
+  font-family:
+    "Cormorant Garamond",
+    serif;
+
+  font-size:
+    32px;
+
+  line-height:
+    1;
+
+  color:
+    #400914;
+}
+
+
+.gift-description {
+  margin-top:
+    12px;
+
+  min-height:
+    22px;
+
+  font-family:
+    "Cormorant Garamond",
+    serif;
+
+  font-size:
+    18px;
+
+  color:
+    #866b71;
+}
+
+
+/* =================================
+   КНОПКА ПОДАРКА
+================================= */
+
+.gift-button {
+  margin-top:
+    22px;
+
+  padding:
+    15px
+    27px;
+
+  border:
+    1px solid #5b0d18;
+
+  background:
+    #5b0d18;
+
+  color:
+    white;
+
+  cursor:
+    pointer;
+
+  font-size:
+    9px;
+
+  letter-spacing:
+    1.5px;
+
+  text-transform:
+    uppercase;
+
+  transition:
+    background 0.3s ease,
+    color 0.3s ease,
+    transform 0.3s ease;
+}
+
+
+.gift-button:hover {
+  background:
+    transparent;
+
+  color:
+    #5b0d18;
+
+  transform:
+    translateY(-2px);
+}
+
+
+/* =================================
+   ФИНАЛЬНЫЙ ТЕКСТ
+================================= */
+
+.closing-section {
+  padding:
+    150px
+    20px;
+
+  background:
+    #22060b;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+}
+
+
+.closing-card {
+  width:
+    min(750px, 90vw);
+
+  padding:
+    90px
+    40px;
+
+  text-align:
+    center;
+
+  background:
+    rgba(91, 13, 24, 0.72);
+
+  border:
+    1px solid
+    rgba(255,255,255,0.12);
+-webkit-backdrop-filter: blur(15px);
+  backdrop-filter:
+    blur(15px);
+}
+
+
+.closing-card h2 {
+  margin:
+    0;
+
+  font-family:
+    "Cormorant Garamond",
+    serif;
+
+  font-size:
+    clamp(45px, 7vw, 75px);
+
+  line-height:
+    1;
+
+  font-weight:
+    400;
+}
+
+
+.closing-card p {
+  margin:
+    35px auto 0;
+
+  max-width:
+    500px;
+
+  font-family:
+    "Cormorant Garamond",
+    serif;
+
+  font-size:
+    22px;
+
+  line-height:
+    1.5;
+
+  color:
+    rgba(255,255,255,0.75);
+}
+
+
+.closing-symbol {
+  margin-top:
+    45px;
+
+  font-size:
+    28px;
+
+  opacity:
+    0.65;
+}
+
+
+/* =================================
+   АДАПТАЦИЯ ПОД ТЕЛЕФОН
+================================= */
+
+@media (max-width: 700px) {
+
+  .text-section {
+    padding:
+      90px 15px;
+  }
+
+
+  .text-card {
+    padding:
+      60px 25px;
+  }
+
+
+  .text-card h2 {
+    font-size:
+      48px;
+  }
+
+
+  .text-card p {
+    font-size:
+      19px;
+  }
+
+
+  .gift-section {
+    padding:
+      90px 15px;
+  }
+
+
+  .gift-section-heading {
+    margin-bottom:
+      45px;
+  }
+
+
+  .gift-section-title {
+    font-size:
+      48px;
+  }
+
+
+  .gift-section-subtitle {
+    font-size:
+      8px;
+
+    letter-spacing:
+      2px;
+
+    line-height:
+      1.7;
+  }
+
+
+  .gifts-grid {
+    grid-template-columns:
+      1fr;
+
+    gap:
+      25px;
+  }
+
+
+  .gift-image {
+    height:
+      390px;
+  }
+
+
+  .gift-name {
+    font-size:
+      30px;
+  }
+
+
+  .gift-description {
+    font-size:
+      17px;
+  }
+
+
+  .gift-button {
+    width:
+      100%;
+  }
+
+
+  .closing-section {
+    padding:
+      100px 15px;
+  }
+
+
+  .closing-card {
+    padding:
+      65px 25px;
+  }
+
+
+  .closing-card h2 {
+    font-size:
+      50px;
+  }
+
+
+  .closing-card p {
+    font-size:
+      20px;
+  }
+
+}
+/* =========================
+   RSVP INTERACTION
+========================= */
+
+.choice-button {
+  transition:
+    transform 0.25s ease,
+    background 0.25s ease,
+    color 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.choice-button:hover {
+  transform: translateY(-2px);
+}
+
+.choice-button.selected {
+  background: #ffffff;
+  color: #4b101f;
+  border-color: #ffffff;
+}
+
+.custom-input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.custom-input:focus {
+  outline: none;
+  border-color: #ffffff;
+}
+
+.submit-button:disabled,
+.gift-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.form-message {
+  margin: 18px 0;
+  padding: 14px 18px;
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.error-message {
+  background: rgba(120, 20, 35, 0.35);
+}
+
+.success-message {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+
+/* =========================
+   GIFTS
+========================= */
+
+.gift-card {
+  transition:
+    opacity 0.35s ease,
+    transform 0.35s ease;
+}
+
+.gift-card.reserved {
+  opacity: 0.48;
+}
+
+.gift-card.reserved .gift-image img {
+  filter: grayscale(35%);
+}
+
+.gift-card:hover:not(.reserved) {
+  transform: translateY(-4px);
+}
+
+.gift-button {
+  transition:
+    transform 0.25s ease,
+    opacity 0.25s ease;
+}
+
+.gift-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.reserved-button {
+  cursor: default;
+}
+
+.gift-global-message {
+  margin: 20px auto;
+  max-width: 700px;
+  padding: 15px 20px;
+  text-align: center;
+  background: rgba(90, 15, 30, 0.15);
+  font-size: 14px;
+}
+
+.gift-loading {
+  padding: 80px 20px;
+  text-align: center;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+}
