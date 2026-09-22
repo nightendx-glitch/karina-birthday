@@ -1,5 +1,10 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import DeleteGuestButton from "./DeleteGuestButton";
 
 export default async function AdminPage() {
   const supabase = await createClient();
@@ -10,7 +15,10 @@ export default async function AdminPage() {
     redirect("/admin/login");
   }
 
-  const { data: guests, error } = await supabase
+  const adminSupabase = createAdminClient();
+
+  // Получаем гостей
+  const { data: guests, error } = await adminSupabase
     .from("guests")
     .select(`
       id,
@@ -22,23 +30,32 @@ export default async function AdminPage() {
     .order("created_at", { ascending: true });
 
   if (error) {
-    console.error(error);
+    console.error(
+      "GUESTS ERROR:",
+      JSON.stringify(error, null, 2)
+    );
   }
 
-  const { data: selections } = await supabase
-    .from("gift_selections")
-    .select(`
-      guest_id,
-      gifts (
-        name
-      )
-    `);
+  // Получаем забронированные подарки
+  const { data: selections, error: selectionsError } =
+    await adminSupabase
+      .from("gift_selections")
+      .select(`
+        guest_id
+      `);
 
-  const giftByGuest: Record<string, string> = {};
+  if (selectionsError) {
+    console.error(
+      "GIFTS ERROR:",
+      JSON.stringify(selectionsError, null, 2)
+    );
+  }
+
+  const giftByGuest: Record<string, boolean> = {};
 
   selections?.forEach((selection: any) => {
-    if (selection.gifts?.name) {
-      giftByGuest[selection.guest_id] = selection.gifts.name;
+    if (selection.guest_id) {
+      giftByGuest[selection.guest_id] = true;
     }
   });
 
@@ -46,7 +63,7 @@ export default async function AdminPage() {
     <main
       style={{
         minHeight: "100vh",
-        background: "#dcccca",
+        background: "#f5f1ed",
         color: "#24171b",
         padding: "40px 20px",
         fontFamily: "Arial, sans-serif",
@@ -58,6 +75,7 @@ export default async function AdminPage() {
           margin: "0 auto",
         }}
       >
+        {/* Заголовок */}
         <div style={{ marginBottom: "35px" }}>
           <div
             style={{
@@ -90,6 +108,7 @@ export default async function AdminPage() {
           </p>
         </div>
 
+        {/* Таблица */}
         <div
           style={{
             background: "white",
@@ -123,7 +142,7 @@ export default async function AdminPage() {
             </p>
           </div>
 
-          {(!guests || guests.length === 0) ? (
+          {!guests || guests.length === 0 ? (
             <div
               style={{
                 padding: "40px 25px",
@@ -139,7 +158,7 @@ export default async function AdminPage() {
                 style={{
                   width: "100%",
                   borderCollapse: "collapse",
-                  minWidth: "700px",
+                  minWidth: "800px",
                 }}
               >
                 <thead>
@@ -150,11 +169,24 @@ export default async function AdminPage() {
                       textAlign: "left",
                     }}
                   >
-                    <th style={{ padding: "16px" }}>Имя</th>
-                    <th style={{ padding: "16px" }}>Присутствие</th>
-                    <th style={{ padding: "16px" }}>Напиток</th>
+                    <th style={{ padding: "16px" }}>
+                      Имя
+                    </th>
+
+                    <th style={{ padding: "16px" }}>
+                      Присутствие
+                    </th>
+
+                    <th style={{ padding: "16px" }}>
+                      Напиток
+                    </th>
+
                     <th style={{ padding: "16px" }}>
                       Забронированный подарок
+                    </th>
+
+                    <th style={{ padding: "16px" }}>
+                      Действие
                     </th>
                   </tr>
                 </thead>
@@ -163,15 +195,12 @@ export default async function AdminPage() {
                   {guests.map((guest: any) => {
                     let drink = guest.alcohol || "—";
 
-                    if (
-                      guest.alcohol === "свой вариант" &&
-                      guest.custom_alcohol
-                    ) {
-                      drink = guest.custom_alcohol;
-                    }
+if (guest.custom_alcohol?.trim()) {
+  drink = guest.custom_alcohol;
+}
 
-                    const gift =
-                      giftByGuest[guest.id] || "Подарок не выбран";
+                    const giftReserved =
+                      Boolean(giftByGuest[guest.id]);
 
                     return (
                       <tr
@@ -180,6 +209,7 @@ export default async function AdminPage() {
                           borderBottom: "1px solid #eee",
                         }}
                       >
+                        {/* ИМЯ */}
                         <td
                           style={{
                             padding: "18px 16px",
@@ -189,23 +219,47 @@ export default async function AdminPage() {
                           {guest.name}
                         </td>
 
-                        <td style={{ padding: "18px 16px" }}>
+                        {/* ПРИСУТСТВИЕ */}
+                        <td
+                          style={{
+                            padding: "18px 16px",
+                          }}
+                        >
                           {guest.attending === "да"
                             ? "✓ Да"
                             : "✕ Нет"}
                         </td>
 
-                        <td style={{ padding: "18px 16px" }}>
+                        {/* НАПИТОК */}
+                        <td
+                          style={{
+                            padding: "18px 16px",
+                          }}
+                        >
                           {drink}
                         </td>
 
+                        {/* ПОДАРОК */}
                         <td
                           style={{
                             padding: "18px 16px",
                             fontWeight: 500,
                           }}
                         >
-                          {gift}
+                          {giftReserved
+                            ? "Забронировано"
+                            : "Не забронировано"}
+                        </td>
+
+                        {/* УДАЛЕНИЕ */}
+                        <td
+                          style={{
+                            padding: "18px 16px",
+                          }}
+                        >
+                          <DeleteGuestButton
+                            guestId={guest.id}
+                          />
                         </td>
                       </tr>
                     );
