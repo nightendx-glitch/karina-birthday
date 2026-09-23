@@ -372,9 +372,7 @@ async function cancelGift(giftId: string) {
     "Отменить бронирование этого подарка?"
   );
 
-  if (!confirmed) {
-    return;
-  }
+  if (!confirmed) return;
 
   setCancelingGiftId(giftId);
 
