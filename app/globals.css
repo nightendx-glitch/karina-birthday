@@ -789,6 +789,7 @@ input {
 
   transition:
     transform 0.4s ease;
+    overflow-anchor: none;
 }
 
 .gift-card:hover {
@@ -2052,4 +2053,74 @@ img {
 
 .gift-button:disabled {
   cursor: not-allowed;
+}
+/* =========================
+   CANCEL CONFIRMATION
+========================= */
+
+.cancel-confirm {
+  margin-top: 14px;
+  padding: 14px;
+  background: rgba(75, 16, 31, 0.06);
+  border: 1px solid rgba(75, 16, 31, 0.15);
+  border-radius: 14px;
+  animation: cancelConfirmAppear 0.2s ease;
+}
+
+.cancel-confirm-text {
+  font-size: 13px;
+  color: #4b101f;
+  margin-bottom: 10px;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.cancel-confirm-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.cancel-confirm-buttons button {
+  flex: 1;
+  min-height: 40px;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.cancel-confirm-buttons button:active {
+  transform: scale(0.97);
+}
+
+.cancel-confirm-yes {
+  border: none;
+  background: #4b101f;
+  color: white;
+}
+
+.cancel-confirm-no {
+  border: 1px solid rgba(75, 16, 31, 0.25);
+  background: white;
+  color: #4b101f;
+}
+
+.cancel-confirm-buttons button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+@keyframes cancelConfirmAppear {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
