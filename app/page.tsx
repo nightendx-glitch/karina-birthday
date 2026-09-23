@@ -78,8 +78,9 @@ export default function Home() {
 
   const [cancelingGiftId, setCancelingGiftId] =
     useState<string | null>(null);
-    const [confirmCancelGiftId, setConfirmCancelGiftId] =
-  useState<string | null>(null);
+
+  const [confirmCancelGiftId, setConfirmCancelGiftId] =
+    useState<string | null>(null);
 
   /* =========================
      LOAD MY RESERVED GIFTS
@@ -128,84 +129,88 @@ export default function Home() {
     }
   }, []);
 
-  /* =========================
-     LOAD GIFTS
-  ========================= */
+ /* =========================
+   LOAD GIFTS
+========================= */
 
-  async function loadGifts() {
-    setGiftsLoading(true);
+async function loadGifts() {
+  setGiftsLoading(true);
 
-    const { data, error } =
-      await supabase
-        .from("gifts")
-        .select(
-          "id, name, description, image_url, is_reserved"
-        )
-        .order("created_at", {
-          ascending: true,
-        });
+  const { data, error } = await supabase
+    .from("gifts")
+    .select(
+      "id, name, description, image_url, is_reserved"
+    )
+    .order("created_at", {
+      ascending: true,
+    });
 
-    if (error) {
-      console.error(
-        "SUPABASE GIFTS ERROR:",
-        error
-      );
+  if (error) {
+    console.error(
+      "SUPABASE GIFTS ERROR:",
+      error
+    );
 
-      setGiftError(
-        `Ошибка загрузки подарков: ${
-          error.message ||
-          "неизвестная ошибка"
-        }`
-      );
-    } else {
-      setGifts(data || []);
-    }
-
-    setGiftsLoading(false);
+    setGiftError(
+      `Ошибка загрузки подарков: ${error.message}`
+    );
+  } else {
+    setGifts(data || []);
   }
 
-  useEffect(() => {
-    loadGifts();
-  }, []);
+  setGiftsLoading(false);
+}
 
-  /* =========================
-     REALTIME GIFTS
-  ========================= */
+useEffect(() => {
+  loadGifts();
+}, []);
 
-  useEffect(() => {
-    const channel = supabase
-      .channel("birthday-gifts-realtime")
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "gifts",
-        },
-        (payload) => {
-          const updatedGift =
-            payload.new as Gift;
 
-          setGifts((currentGifts) =>
-            currentGifts.map((gift) =>
-              gift.id === updatedGift.id
-                ? {
-                    ...gift,
-                    is_reserved:
-                      updatedGift.is_reserved,
-                  }
-                : gift
-            )
+/* =========================
+   REALTIME GIFTS
+========================= */
+
+useEffect(() => {
+  const channel = supabase
+    .channel("birthday-gifts-realtime")
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "gifts",
+      },
+      async () => {
+        console.log(
+          "GIFTS CHANGED — RELOADING"
+        );
+
+        await loadGifts();
+
+        const currentGuestId =
+          localStorage.getItem(
+            "birthday_guest_id"
+          );
+
+        if (currentGuestId) {
+          await loadMyReservedGifts(
+            currentGuestId
           );
         }
-      )
-      .subscribe();
+      }
+    )
+    .subscribe((status) => {
+      console.log(
+        "REALTIME STATUS:",
+        status
+      );
+    });
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, []);
+     
   /* =========================
      RSVP
   ========================= */
@@ -254,7 +259,13 @@ export default function Home() {
     setRsvpLoading(true);
 
     try {
+      const existingGuestId =
+        localStorage.getItem(
+          "birthday_guest_id"
+        );
+
       const newGuestId =
+        existingGuestId ||
         crypto.randomUUID();
 
       const finalAlcohol =
@@ -273,27 +284,41 @@ export default function Home() {
       const { error } =
         await supabase
           .from("guests")
-          .insert({
-            id: newGuestId,
-            name: cleanName,
-            attending,
-            alcohol: finalAlcohol,
-            custom_alcohol:
-              finalCustomAlcohol,
-          });
+          .upsert(
+            {
+              id: newGuestId,
+              name: cleanName,
+              attending,
+              alcohol: finalAlcohol,
+              custom_alcohol:
+                finalCustomAlcohol,
+            },
+            {
+              onConflict: "id",
+            }
+          );
 
       if (error) {
-        console.error(
-          "RSVP ERROR:",
-          error
-        );
+  console.error("RSVP ERROR FULL:", error);
+  console.error("RSVP ERROR MESSAGE:", error.message);
+  console.error("RSVP ERROR DETAILS:", error.details);
+  console.error("RSVP ERROR HINT:", error.hint);
+  console.error("RSVP ERROR CODE:", error.code);
 
-        setRsvpError(
-          "Не получилось сохранить ответ. Попробуйте ещё раз."
-        );
+  alert(
+    `Ошибка RSVP:\n\n` +
+    `Код: ${error.code ?? "нет"}\n` +
+    `Сообщение: ${error.message ?? "нет"}\n` +
+    `Детали: ${error.details ?? "нет"}\n` +
+    `Подсказка: ${error.hint ?? "нет"}`
+  );
 
-        return;
-      }
+  setRsvpError(
+    error.message || "Не удалось сохранить ответ."
+  );
+
+  return;
+}
 
       localStorage.setItem(
         "birthday_guest_id",
@@ -301,6 +326,14 @@ export default function Home() {
       );
 
       setGuestId(newGuestId);
+
+      /*
+       * После заполнения анкеты
+       * снова загружаем его подарки.
+       */
+      await loadMyReservedGifts(
+        newGuestId
+      );
 
       setRsvpSuccess(true);
       setRsvpError("");
@@ -322,263 +355,283 @@ export default function Home() {
      RESERVE GIFT
   ========================= */
 
-
-async function reserveGift(
+  
+const reserveGift = async (
   giftId: string,
   event?: MouseEvent<HTMLButtonElement>
-) {
-  event?.preventDefault();
-  event?.stopPropagation();
-
-  setGiftError("");
-
-  const currentGuestId =
-    guestId ||
-    localStorage.getItem("birthday_guest_id");
-
-  if (!currentGuestId) {
+) => {
+  // Без заполненной анкеты бронировать нельзя
+  if (!guestId) {
     setGiftError(
-      "Сначала подтвердите своё присутствие, а затем выберите подарок."
+      "Пожалуйста, заполните анкету для бронирования подарка."
     );
+
+    // Прокручиваем к анкете
+    document
+      .getElementById("rsvp")
+      ?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
 
     return;
   }
 
+  const currentGuestId = guestId;
+
+  setGiftError("");
   setReservingGiftId(giftId);
 
+  // Сохраняем позицию страницы
+  const scrollY = window.scrollY;
+
   try {
-    console.log("RESERVE:", {
-      giftId,
-      guestId: currentGuestId,
-    });
-
-    const { data, error } =
-      await supabase.rpc("reserve_gift", {
-        p_gift_id: giftId,
-        p_guest_id: currentGuestId,
-      });
-
-    console.log("RESERVE RESULT:", {
-      data,
-      error,
+    const { data, error } = await supabase.rpc("reserve_gift", {
+      p_gift_id: giftId,
+      p_guest_id: currentGuestId,
     });
 
     if (error) {
-      console.error(
-        "RESERVE GIFT ERROR:",
-        error
-      );
+      console.error("RESERVE GIFT ERROR:", error);
 
       setGiftError(
-        `Не удалось забронировать подарок: ${error.message}`
+        error.message || "Не удалось забронировать подарок."
       );
 
       return;
     }
 
-    if (data === true) {
-      setGifts((currentGifts) =>
-        currentGifts.map((gift) =>
-          gift.id === giftId
-            ? {
-                ...gift,
-                is_reserved: true,
-              }
-            : gift
-        )
-      );
-
-      setMyReservedGiftIds((current) =>
-        current.includes(giftId)
-          ? current
-          : [...current, giftId]
-      );
-
-      setGiftError("");
-    } else {
+    // Если RPC вернул false — подарок уже занят
+    if (!data) {
       setGiftError(
-        "Этот подарок уже забронировал кто-то другой. Выберите другой подарок."
+        "Этот подарок уже забронирован другим гостем."
       );
 
       setGifts((currentGifts) =>
         currentGifts.map((gift) =>
           gift.id === giftId
-            ? {
-                ...gift,
-                is_reserved: true,
-              }
+            ? { ...gift, is_reserved: true }
             : gift
         )
       );
+
+      return;
     }
-  } catch (error) {
-    console.error(
-      "RESERVE GIFT ERROR:",
-      error
+
+    // Успешное бронирование
+    setGifts((currentGifts) =>
+      currentGifts.map((gift) =>
+        gift.id === giftId
+          ? { ...gift, is_reserved: true }
+          : gift
+      )
     );
 
+    setMyReservedGiftIds((currentIds) => {
+      if (currentIds.includes(giftId)) {
+        return currentIds;
+      }
+
+      return [...currentIds, giftId];
+    });
+
+    setGiftError("");
+
+  } catch (error) {
+    console.error("RESERVE GIFT UNEXPECTED ERROR:", error);
+
     setGiftError(
-      "Не удалось забронировать подарок. Проверьте интернет и попробуйте ещё раз."
+      "Не удалось забронировать подарок. Попробуйте ещё раз."
     );
   } finally {
     setReservingGiftId(null);
-  }
-}
-  
-  
-/* =========================
-   CANCEL GIFT
-========================= */
 
-async function cancelGift(
-  giftId: string,
-  event?: MouseEvent<HTMLButtonElement>
-) {
-  event?.preventDefault();
-  event?.stopPropagation();
-
-  setGiftError("");
-
-  const currentGuestId =
-    guestId ||
-    localStorage.getItem("birthday_guest_id");
-
-  if (!currentGuestId) {
-    setGiftError(
-      "Не удалось определить гостя. Пожалуйста, подтвердите присутствие ещё раз."
-    );
-    return;
-  }
-
-  /*
-   * Запоминаем положение именно этой карточки
-   * до изменения состояния.
-   */
-  const card = document.querySelector(
-    `[data-gift-id="${giftId}"]`
-  );
-
-  const oldTop =
-    card?.getBoundingClientRect().top ?? null;
-
-  setCancelingGiftId(giftId);
-
-  try {
-    const { data, error } =
-      await supabase.rpc("cancel_gift", {
-        p_gift_id: giftId,
-        p_guest_id: currentGuestId,
+    // Возвращаем пользователя туда, где он был
+    requestAnimationFrame(() => {
+      window.scrollTo({
+        top: scrollY,
+        behavior: "instant",
       });
+    });
+  }
+};
+  /* =========================
+     CANCEL GIFT
+  ========================= */
 
-    if (error) {
+  async function cancelGift(
+    giftId: string,
+    event?: MouseEvent<HTMLButtonElement>
+  ) {
+    event?.preventDefault();
+    event?.stopPropagation();
+
+    setGiftError("");
+
+    const currentGuestId =
+      guestId ||
+      localStorage.getItem(
+        "birthday_guest_id"
+      );
+
+    if (!currentGuestId) {
+      setGiftError(
+        "Не удалось определить гостя. Пожалуйста, попробуйте забронировать подарок ещё раз."
+      );
+      return;
+    }
+
+    /*
+     * Запоминаем положение карточки,
+     * чтобы страница не прыгала.
+     */
+    const card = document.querySelector(
+      `[data-gift-id="${giftId}"]`
+    );
+
+    const oldTop =
+      card?.getBoundingClientRect()
+        .top ?? null;
+
+    setCancelingGiftId(giftId);
+
+    try {
+      const { data, error } =
+        await supabase.rpc(
+          "cancel_gift",
+          {
+            p_gift_id: giftId,
+            p_guest_id:
+              currentGuestId,
+          }
+        );
+
+      if (error) {
+        console.error(
+          "CANCEL GIFT ERROR:",
+          error
+        );
+
+        setGiftError(
+          "Не удалось отменить бронирование. Попробуйте ещё раз."
+        );
+
+        return;
+      }
+
+      if (data === true) {
+        setGifts((currentGifts) =>
+          currentGifts.map((gift) =>
+            gift.id === giftId
+              ? {
+                  ...gift,
+                  is_reserved: false,
+                }
+              : gift
+          )
+        );
+
+        setMyReservedGiftIds(
+          (current) =>
+            current.filter(
+              (id) =>
+                id !== giftId
+            )
+        );
+
+        setConfirmCancelGiftId(
+          null
+        );
+
+        setGiftError("");
+
+        /*
+         * Возвращаем карточку
+         * на прежнюю позицию экрана.
+         */
+        if (oldTop !== null) {
+          requestAnimationFrame(
+            () => {
+              requestAnimationFrame(
+                () => {
+                  const newCard =
+                    document.querySelector(
+                      `[data-gift-id="${giftId}"]`
+                    );
+
+                  if (!newCard) {
+                    return;
+                  }
+
+                  const newTop =
+                    newCard.getBoundingClientRect()
+                      .top;
+
+                  const difference =
+                    newTop - oldTop;
+
+                  if (
+                    Math.abs(
+                      difference
+                    ) > 1
+                  ) {
+                    window.scrollBy({
+                      top: difference,
+                      left: 0,
+                      behavior:
+                        "instant",
+                    });
+                  }
+                }
+              );
+            }
+          );
+        }
+      } else {
+        /*
+         * Если бронирование уже было
+         * отменено другим запросом.
+         */
+        setMyReservedGiftIds(
+          (current) =>
+            current.filter(
+              (id) =>
+                id !== giftId
+            )
+        );
+
+        setGifts((currentGifts) =>
+          currentGifts.map((gift) =>
+            gift.id === giftId
+              ? {
+                  ...gift,
+                  is_reserved: false,
+                }
+              : gift
+          )
+        );
+
+        setConfirmCancelGiftId(
+          null
+        );
+
+        setGiftError(
+          "Бронирование уже было отменено."
+        );
+      }
+    } catch (error) {
       console.error(
         "CANCEL GIFT ERROR:",
         error
       );
 
       setGiftError(
-        "Не удалось отменить бронирование. Попробуйте ещё раз."
+        "Не удалось отменить бронирование. Проверьте интернет."
       );
-
-      return;
+    } finally {
+      setCancelingGiftId(null);
     }
-
-    if (data === true) {
-      /*
-       * Меняем только нужный подарок.
-       * Порядок остальных подарков не меняется.
-       */
-      setGifts((currentGifts) =>
-        currentGifts.map((gift) =>
-          gift.id === giftId
-            ? {
-                ...gift,
-                is_reserved: false,
-              }
-            : gift
-        )
-      );
-
-      setMyReservedGiftIds((current) =>
-        current.filter(
-          (id) => id !== giftId
-        )
-      );
-
-      setConfirmCancelGiftId(null);
-      setGiftError("");
-
-      /*
-       * После перерисовки возвращаем карточку
-       * ровно на прежнее место экрана.
-       */
-      if (oldTop !== null) {
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            const newCard =
-              document.querySelector(
-                `[data-gift-id="${giftId}"]`
-              );
-
-            if (!newCard) return;
-
-            const newTop =
-              newCard.getBoundingClientRect().top;
-
-            const difference =
-              newTop - oldTop;
-
-            if (Math.abs(difference) > 1) {
-              window.scrollBy({
-                top: difference,
-                left: 0,
-                behavior: "instant",
-              });
-            }
-          });
-        });
-      }
-    } else {
-      /*
-       * Если бронирование уже отменил другой запрос,
-       * просто синхронизируем карточку.
-       */
-      setMyReservedGiftIds((current) =>
-        current.filter(
-          (id) => id !== giftId
-        )
-      );
-
-      setGifts((currentGifts) =>
-        currentGifts.map((gift) =>
-          gift.id === giftId
-            ? {
-                ...gift,
-                is_reserved: false,
-              }
-            : gift
-        )
-      );
-
-      setConfirmCancelGiftId(null);
-
-      setGiftError(
-        "Бронирование уже было отменено."
-      );
-    }
-  } catch (error) {
-    console.error(
-      "CANCEL GIFT ERROR:",
-      error
-    );
-
-    setGiftError(
-      "Не удалось отменить бронирование. Проверьте интернет."
-    );
-  } finally {
-    setCancelingGiftId(null);
   }
-}
 
   /* =========================
      GROUP GIFTS
@@ -928,7 +981,8 @@ async function cancelGift(
             <button
               type="button"
               className={`choice-button ${
-                alcohol === "Не употребляю"
+                alcohol ===
+                "Не употребляю"
                   ? "selected"
                   : ""
               }`}
@@ -945,7 +999,8 @@ async function cancelGift(
             <button
               type="button"
               className={`choice-button ${
-                alcohol === "Свой вариант"
+                alcohol ===
+                "Свой вариант"
                   ? "selected"
                   : ""
               }`}
@@ -960,7 +1015,8 @@ async function cancelGift(
 
           </div>
 
-          {alcohol === "Свой вариант" && (
+          {alcohol ===
+            "Свой вариант" && (
             <input
               className="custom-input"
               type="text"
@@ -1115,10 +1171,14 @@ async function cancelGift(
 
                 return (
                   <div
-  className={`gift-card ${isReserved ? "reserved" : ""}`}
-  key={gift.id}
-  data-gift-id={gift.id}
->
+                    className={`gift-card ${
+                      isReserved
+                        ? "reserved"
+                        : ""
+                    }`}
+                    key={gift.id}
+                    data-gift-id={gift.id}
+                  >
 
                     <div className="gift-image">
 
@@ -1129,9 +1189,13 @@ async function cancelGift(
 
                       <div className="gift-number-badge">
                         {String(
-                          gifts.indexOf(gift) +
-                            1
-                        ).padStart(2, "0")}
+                          gifts.indexOf(
+                            gift
+                          ) + 1
+                        ).padStart(
+                          2,
+                          "0"
+                        )}
                       </div>
 
                     </div>
@@ -1146,104 +1210,137 @@ async function cancelGift(
                         {gift.description}
                       </div>
 
-                      {isReserved && isMine ? (
+                      {/* =========================
+                          MY RESERVED GIFT
+                      ========================= */}
 
-  confirmCancelGiftId === gift.id ? (
+                      {isReserved &&
+                      isMine ? (
 
-    <div className="cancel-confirm">
+                        confirmCancelGiftId ===
+                        gift.id ? (
 
-      <div className="cancel-confirm-text">
-        Отменить этот подарок?
-      </div>
+                          <div className="cancel-confirm">
 
-      <div className="cancel-confirm-buttons">
+                            <div className="cancel-confirm-text">
+                              Отменить этот подарок?
+                            </div>
 
-        <button
-          type="button"
-          className="cancel-confirm-yes"
-          disabled={isCanceling}
-          onClick={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
+                            <div className="cancel-confirm-buttons">
 
-            cancelGift(
-              gift.id,
-              event
-            );
-          }}
-        >
-          {isCanceling
-            ? "Отменяем..."
-            : "Да, отменить"}
-        </button>
+                              <button
+                                type="button"
+                                className="cancel-confirm-yes"
+                                disabled={
+                                  isCanceling
+                                }
+                                onClick={(
+                                  event
+                                ) => {
+                                  event.preventDefault();
+                                  event.stopPropagation();
 
-        <button
-          type="button"
-          className="cancel-confirm-no"
-          disabled={isCanceling}
-          onClick={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
+                                  cancelGift(
+                                    gift.id,
+                                    event
+                                  );
+                                }}
+                              >
+                                {isCanceling
+                                  ? "Отменяем..."
+                                  : "Да, отменить"}
+                              </button>
 
-            setConfirmCancelGiftId(null);
-          }}
-        >
-          Оставить
-        </button>
+                              <button
+                                type="button"
+                                className="cancel-confirm-no"
+                                disabled={
+                                  isCanceling
+                                }
+                                onClick={(
+                                  event
+                                ) => {
+                                  event.preventDefault();
+                                  event.stopPropagation();
 
-      </div>
+                                  setConfirmCancelGiftId(
+                                    null
+                                  );
+                                }}
+                              >
+                                Оставить
+                              </button>
 
-    </div>
+                            </div>
 
-  ) : (
+                          </div>
 
-    <button
-      type="button"
-      className="gift-button cancel-button"
-      onClick={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
+                        ) : (
 
-        setConfirmCancelGiftId(gift.id);
-      }}
-    >
-      Отменить бронирование
-    </button>
+                          <button
+                            type="button"
+                            className="gift-button cancel-button"
+                            onClick={(
+                              event
+                            ) => {
+                              event.preventDefault();
+                              event.stopPropagation();
 
-  )
+                              setConfirmCancelGiftId(
+                                gift.id
+                              );
+                            }}
+                          >
+                            Отменить бронирование
+                          </button>
 
-) : isReserved ? (
+                        )
 
-  <button
-    type="button"
-    className="gift-button reserved-button"
-    disabled
-  >
-    Забронировано
-  </button>
+                      ) : isReserved ? (
 
-) : (
+                        /* =========================
+                           RESERVED BY SOMEONE ELSE
+                        ========================= */
 
-  <button
-    type="button"
-    className="gift-button"
-    disabled={isReserving}
-    onClick={(event) => {
-      event.preventDefault();
-      event.stopPropagation();
+                        <button
+                          type="button"
+                          className="gift-button reserved-button"
+                          disabled
+                        >
+                          Забронировано
+                        </button>
 
-      reserveGift(
-        gift.id,
-        event
-      );
-    }}
-  >
-    {isReserving
-      ? "Бронируем..."
-      : "Забронировать подарок"}
-  </button>
+                      ) : (
 
-)}
+                        /* =========================
+                           FREE GIFT
+                        ========================= */
+
+                        <button
+                          type="button"
+                          className="gift-button"
+                          disabled={
+                            isReserving
+                          }
+                          onClick={(
+                            event
+                          ) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+
+                            reserveGift(
+                              gift.id,
+                              event
+                            );
+                          }}
+                        >
+                          {isReserving
+                            ? "Бронируем..."
+                            : "Забронировать подарок"}
+                        </button>
+
+                      )}
+
                     </div>
 
                   </div>

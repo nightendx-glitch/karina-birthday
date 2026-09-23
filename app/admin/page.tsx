@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import DeleteGuestButton from "./DeleteGuestButton";
 import AdminRealtime from "./AdminRealtime";
+
 export default async function AdminPage() {
   const supabase = await createClient();
 
@@ -17,7 +18,10 @@ export default async function AdminPage() {
 
   const adminSupabase = createAdminClient();
 
-  // Получаем гостей
+  // =========================
+  // ПОЛУЧАЕМ ГОСТЕЙ
+  // =========================
+
   const { data: guests, error } = await adminSupabase
     .from("guests")
     .select(`
@@ -27,8 +31,13 @@ export default async function AdminPage() {
       alcohol,
       custom_alcohol
     `)
-    .order("created_at", { ascending: true });
-
+    .order("created_at", {
+      ascending: true,
+    });
+console.log(
+  "GUESTS FROM SUPABASE:",
+  JSON.stringify(guests, null, 2)
+);
   if (error) {
     console.error(
       "GUESTS ERROR:",
@@ -36,28 +45,53 @@ export default async function AdminPage() {
     );
   }
 
-  // Получаем забронированные подарки
-  const { data: selections, error: selectionsError } =
-    await adminSupabase
-      .from("gift_selections")
-      .select(`
-        guest_id
-      `);
+  // =========================
+  // ПОЛУЧАЕМ ЗАБРОНИРОВАННЫЕ ПОДАРКИ
+  // =========================
+
+  const {
+    data: selections,
+    error: selectionsError,
+  } = await adminSupabase
+    .from("gift_selections")
+    .select(`
+      guest_id
+    `);
 
   if (selectionsError) {
     console.error(
       "GIFTS ERROR:",
-      JSON.stringify(selectionsError, null, 2)
+      JSON.stringify(
+        selectionsError,
+        null,
+        2
+      )
     );
   }
 
-  const giftByGuest: Record<string, boolean> = {};
+  // =========================
+  // СОЗДАЁМ СПИСОК
+  // КТО ЗАБРОНИРОВАЛ ПОДАРОК
+  // =========================
 
-  selections?.forEach((selection: any) => {
-    if (selection.guest_id) {
-      giftByGuest[selection.guest_id] = true;
+  const giftByGuest: Record<
+    string,
+    boolean
+  > = {};
+
+  selections?.forEach(
+    (selection: any) => {
+      if (selection.guest_id) {
+        giftByGuest[
+          selection.guest_id
+        ] = true;
+      }
     }
-  });
+  );
+
+  // =========================
+  // СТРАНИЦА
+  // =========================
 
   return (
     <main
@@ -66,23 +100,33 @@ export default async function AdminPage() {
         background: "#f5f1ed",
         color: "#24171b",
         padding: "40px 20px",
-        fontFamily: "Arial, sans-serif",
+        fontFamily:
+          "Arial, sans-serif",
       }}
     >
       <AdminRealtime />
+
       <div
         style={{
           maxWidth: "1100px",
           margin: "0 auto",
         }}
       >
-        {/* Заголовок */}
-        <div style={{ marginBottom: "35px" }}>
+        {/* =========================
+            ЗАГОЛОВОК
+        ========================= */}
+
+        <div
+          style={{
+            marginBottom: "35px",
+          }}
+        >
           <div
             style={{
               fontSize: "12px",
               letterSpacing: "0.2em",
-              textTransform: "uppercase",
+              textTransform:
+                "uppercase",
               opacity: 0.55,
               marginBottom: "10px",
             }}
@@ -109,19 +153,26 @@ export default async function AdminPage() {
           </p>
         </div>
 
-        {/* Таблица */}
+        {/* =========================
+            ТАБЛИЦА
+        ========================= */}
+
         <div
           style={{
             background: "white",
             borderRadius: "22px",
             overflow: "hidden",
-            boxShadow: "0 10px 40px rgba(0,0,0,0.06)",
+            boxShadow:
+              "0 10px 40px rgba(0,0,0,0.06)",
           }}
         >
+          {/* Заголовок таблицы */}
+
           <div
             style={{
               padding: "25px",
-              borderBottom: "1px solid #eee",
+              borderBottom:
+                "1px solid #eee",
             }}
           >
             <h2
@@ -139,132 +190,240 @@ export default async function AdminPage() {
                 opacity: 0.55,
               }}
             >
-              Всего ответов: {guests?.length || 0}
+              Всего ответов:{" "}
+              {guests?.length || 0}
             </p>
           </div>
 
-          {!guests || guests.length === 0 ? (
+          {/* Если гостей нет */}
+
+          {!guests ||
+          guests.length === 0 ? (
             <div
               style={{
-                padding: "40px 25px",
+                padding:
+                  "40px 25px",
                 textAlign: "center",
                 opacity: 0.6,
               }}
             >
-              Пока никто не подтвердил участие.
+              Пока никто не
+              подтвердил участие.
             </div>
           ) : (
-            <div style={{ overflowX: "auto" }}>
+            <div
+              style={{
+                overflowX: "auto",
+              }}
+            >
               <table
                 style={{
                   width: "100%",
-                  borderCollapse: "collapse",
+                  borderCollapse:
+                    "collapse",
                   minWidth: "800px",
                 }}
               >
+                {/* =========================
+                    ЗАГОЛОВКИ
+                ========================= */}
+
                 <thead>
                   <tr
                     style={{
-                      background: "#4b101f",
+                      background:
+                        "#4b101f",
                       color: "white",
-                      textAlign: "left",
+                      textAlign:
+                        "left",
                     }}
                   >
-                    <th style={{ padding: "16px" }}>
+                    <th
+                      style={{
+                        padding: "16px",
+                      }}
+                    >
                       Имя
                     </th>
 
-                    <th style={{ padding: "16px" }}>
+                    <th
+                      style={{
+                        padding: "16px",
+                      }}
+                    >
                       Присутствие
                     </th>
 
-                    <th style={{ padding: "16px" }}>
+                    <th
+                      style={{
+                        padding: "16px",
+                      }}
+                    >
                       Напиток
                     </th>
 
-                    <th style={{ padding: "16px" }}>
-                      Забронированный подарок
+                    <th
+                      style={{
+                        padding: "16px",
+                      }}
+                    >
+                      Забронированный
+                      подарок
                     </th>
 
-                    <th style={{ padding: "16px" }}>
+                    <th
+                      style={{
+                        padding: "16px",
+                      }}
+                    >
                       Действие
                     </th>
                   </tr>
                 </thead>
 
-                <tbody>
-                  {guests.map((guest: any) => {
-                    let drink = guest.alcohol || "—";
+                {/* =========================
+                    ГОСТИ
+                ========================= */}
 
-if (guest.custom_alcohol?.trim()) {
-  drink = guest.custom_alcohol;
+                <tbody>
+                  {guests.map(
+                    (guest: any) => {
+                      // -------------------------
+                      // НАПИТОК
+                      // -------------------------
+
+                      let drink =
+                        guest.alcohol ||
+                        "—";
+
+                      if (
+                        guest.custom_alcohol?.trim()
+                      ) {
+                        drink =
+                          guest.custom_alcohol;
+                      }
+
+                      // -------------------------
+                      // ПОДАРОК
+                      // -------------------------
+
+                      const giftReserved =
+                        Boolean(
+                          giftByGuest[
+                            guest.id
+                          ]
+                        );
+
+                      // -------------------------
+                      // ПРИСУТСТВИЕ
+                      // -------------------------
+
+                      const attendanceValue = String(
+  guest.attending ?? ""
+).trim().toLowerCase();
+
+let attendanceText = "— Не указано";
+
+if (
+  attendanceValue === "yes" ||
+  attendanceValue === "да"
+) {
+  attendanceText = "✓ Да";
 }
 
-                    const giftReserved =
-                      Boolean(giftByGuest[guest.id]);
+if (
+  attendanceValue === "no" ||
+  attendanceValue === "нет"
+) {
+  attendanceText = "✕ Нет";
+}
 
-                    return (
-                      <tr
-                        key={guest.id}
-                        style={{
-                          borderBottom: "1px solid #eee",
-                        }}
-                      >
-                        {/* ИМЯ */}
-                        <td
+                      return (
+                        <tr
+                          key={
+                            guest.id
+                          }
                           style={{
-                            padding: "18px 16px",
-                            fontWeight: 600,
+                            borderBottom:
+                              "1px solid #eee",
                           }}
                         >
-                          {guest.name}
-                        </td>
+                          {/* =========================
+                              ИМЯ
+                          ========================= */}
 
-                        {/* ПРИСУТСТВИЕ */}
-                        <td
-                          style={{
-                            padding: "18px 16px",
-                          }}
-                        >
-                          {guest.attending === "да"
-                            ? "✓ Да"
-                            : "✕ Нет"}
-                        </td>
+                          <td
+                            style={{
+                              padding:
+                                "18px 16px",
+                              fontWeight: 600,
+                            }}
+                          >
+                            {guest.name}
+                          </td>
 
-                        {/* НАПИТОК */}
-                        <td
-                          style={{
-                            padding: "18px 16px",
-                          }}
-                        >
-                          {drink}
-                        </td>
+                          {/* =========================
+                              ПРИСУТСТВИЕ
+                          ========================= */}
 
-                        {/* ПОДАРОК */}
-                        <td
-                          style={{
-                            padding: "18px 16px",
-                            fontWeight: 500,
-                          }}
-                        >
-                          {giftReserved
-                            ? "Забронировано"
-                            : "Не забронировано"}
-                        </td>
+                          <td
+                            style={{
+                              padding:
+                                "18px 16px",
+                            }}
+                          >
+                            {attendanceText}
+                          </td>
 
-                        {/* УДАЛЕНИЕ */}
-                        <td
-                          style={{
-                            padding: "18px 16px",
-                          }}
-                        >
-                          <DeleteGuestButton
-                            guestId={guest.id}
-                          />
-                        </td>
-                      </tr>
-                    );
-                  })}
+                          {/* =========================
+                              НАПИТОК
+                          ========================= */}
+
+                          <td
+                            style={{
+                              padding:
+                                "18px 16px",
+                            }}
+                          >
+                            {drink}
+                          </td>
+
+                          {/* =========================
+                              ПОДАРОК
+                          ========================= */}
+
+                          <td
+                            style={{
+                              padding:
+                                "18px 16px",
+                              fontWeight: 500,
+                            }}
+                          >
+                            {giftReserved
+                              ? "Забронировано"
+                              : "Не забронировано"}
+                          </td>
+
+                          {/* =========================
+                              УДАЛЕНИЕ
+                          ========================= */}
+
+                          <td
+                            style={{
+                              padding:
+                                "18px 16px",
+                            }}
+                          >
+                            <DeleteGuestButton
+                              guestId={
+                                guest.id
+                              }
+                            />
+                          </td>
+                        </tr>
+                      );
+                    }
+                  )}
                 </tbody>
               </table>
             </div>

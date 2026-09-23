@@ -777,8 +777,9 @@ input {
 
 
 .gift-card {
-  padding:
-    20px;
+  position: relative;
+
+  padding: 20px;
 
   background: white;
 
@@ -787,11 +788,12 @@ input {
 
   text-align: center;
 
-  transition:
-    transform 0.4s ease;
-    overflow-anchor: none;
-}
+  overflow-anchor: none;
 
+  transition:
+    opacity 0.35s ease,
+    box-shadow 0.35s ease;
+}
 .gift-card:hover {
   transform:
     translateY(-6px);
@@ -1434,24 +1436,23 @@ input {
 ================================= */
 
 .gift-card {
-  background:
-    #ffffff;
+  position: relative;
 
-  padding:
-    18px;
+  padding: 20px;
 
-  text-align:
-    center;
+  background: white;
 
   box-shadow:
-    0 20px 60px
-    rgba(70, 20, 30, 0.08);
+    0 15px 50px rgba(50,0,10,0.09);
+
+  text-align: center;
+
+  overflow-anchor: none;
 
   transition:
-    transform 0.45s ease,
-    box-shadow 0.45s ease;
+    opacity 0.35s ease,
+    box-shadow 0.35s ease;
 }
-
 
 .gift-card:hover {
   transform:
@@ -1928,15 +1929,26 @@ input {
   background: rgba(255, 255, 255, 0.12);
 }
 
-
 /* =========================
-   GIFTS
+   GIFTS — RESERVATION
 ========================= */
 
 .gift-card {
+  position: relative;
+  overflow-anchor: none;
+
   transition:
     opacity 0.35s ease,
-    transform 0.35s ease;
+    box-shadow 0.35s ease;
+
+  /* ВАЖНО:
+     карточка никогда не должна менять
+     своё положение после бронирования */
+  transform: none !important;
+}
+
+.gift-card:hover {
+  transform: translateY(-4px) !important;
 }
 
 .gift-card.reserved {
@@ -1948,7 +1960,7 @@ input {
 }
 
 .gift-card:hover:not(.reserved) {
-  transform: translateY(-4px);
+  transform: translateY(-4px) !important;
 }
 
 .gift-button {
@@ -1961,24 +1973,12 @@ input {
   transform: translateY(-2px);
 }
 
+.gift-button:disabled {
+  cursor: not-allowed;
+}
+
 .reserved-button {
   cursor: default;
-}
-
-.gift-global-message {
-  margin: 20px auto;
-  max-width: 700px;
-  padding: 15px 20px;
-  text-align: center;
-  background: rgba(90, 15, 30, 0.15);
-  font-size: 14px;
-}
-
-.gift-loading {
-  padding: 80px 20px;
-  text-align: center;
-  font-size: 14px;
-  letter-spacing: 0.08em;
 }
 /* =================================
    МОБИЛЬНАЯ ВЕРСИЯ — ИСПРАВЛЕНИЯ
@@ -2123,4 +2123,56 @@ img {
     opacity: 1;
     transform: translateY(0);
   }
+}
+/* =========================
+   FIX GIFT BUTTONS
+========================= */
+
+.gift-card .gift-button {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+
+  width: auto;
+  min-width: 220px;
+
+  min-height: 45px;
+
+  margin-top: 22px;
+  padding: 15px 27px;
+
+  border: 1px solid #5b0d18;
+
+  background: #5b0d18;
+
+  color: #ffffff;
+
+  cursor: pointer;
+
+  visibility: visible;
+  overflow: visible;
+}
+
+.gift-card .gift-button:disabled {
+  display: inline-flex !important;
+  visibility: visible;
+}
+
+.gift-card .reserved-button {
+  opacity: 0.8;
+  cursor: default;
+}
+
+.gift-card .cancel-button {
+  background: #ffffff;
+  color: #5b0d18;
+}
+
+.gift-card .cancel-button:hover {
+  background: #5b0d18;
+  color: #ffffff;
+}
+
+.gift-card .gift-button:hover:not(:disabled) {
+  transform: translateY(-2px);
 }
