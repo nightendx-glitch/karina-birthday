@@ -57,19 +57,54 @@ export default function Home() {
   const [gifts, setGifts] = useState<Gift[]>([]);
   const [giftsLoading, setGiftsLoading] = useState(true);
   const [giftError, setGiftError] = useState("");
-  const [reservingGiftId, setReservingGiftId] = useState<string | null>(
-    null
-  );
+
+  const [reservingGiftId, setReservingGiftId] =
+    useState<string | null>(null);
+
+  const [myReservedGiftIds, setMyReservedGiftIds] =
+    useState<string[]>([]);
+
+  const [cancelingGiftId, setCancelingGiftId] =
+    useState<string | null>(null);
+
+  /* =========================
+     LOAD MY RESERVED GIFTS
+  ========================= */
+
+  async function loadMyReservedGifts(currentGuestId: string) {
+    const { data, error } = await supabase.rpc(
+      "get_my_reserved_gifts",
+      {
+        p_guest_id: currentGuestId,
+      }
+    );
+
+    if (error) {
+      console.error(
+        "MY RESERVED GIFTS ERROR:",
+        error
+      );
+      return;
+    }
+
+    const ids = (data || []).map(
+      (item: { gift_id: string }) => item.gift_id
+    );
+
+    setMyReservedGiftIds(ids);
+  }
 
   /* =========================
      LOAD SAVED GUEST
   ========================= */
 
   useEffect(() => {
-    const savedGuestId = localStorage.getItem("birthday_guest_id");
+    const savedGuestId =
+      localStorage.getItem("birthday_guest_id");
 
     if (savedGuestId) {
       setGuestId(savedGuestId);
+      loadMyReservedGifts(savedGuestId);
     }
   }, []);
 
@@ -77,34 +112,64 @@ export default function Home() {
      LOAD GIFTS
   ========================= */
 
-  useEffect(() => {
-    async function loadGifts() {
-      setGiftsLoading(true);
-      setGiftError("");
+  async function loadGifts() {
+    setGiftsLoading(true);
+    setGiftError("");
 
-      const { data, error } = await supabase
-        .from("gifts")
-        .select("id, name, description, image_url, is_reserved")
-        .order("created_at", { ascending: true });
+    const { data, error } = await supabase
+      .from("gifts")
+      .select(
+        "id, name, description, image_url, is_reserved"
+      )
+      .order("created_at", {
+        ascending: true,
+      });
 
-      if (error) {
-  console.error("SUPABASE GIFTS ERROR:", error);
-  console.error("message:", error.message);
-  console.error("details:", error.details);
-  console.error("hint:", error.hint);
-  console.error("code:", error.code);
+    if (error) {
+      console.error(
+        "SUPABASE GIFTS ERROR:",
+        error
+      );
 
-  setGiftError(
-    `Ошибка загрузки подарков: ${error.message || "неизвестная ошибка"}`
-  );
-} else {
-        setGifts(data || []);
-      }
-
-      setGiftsLoading(false);
+      setGiftError(
+        `Ошибка загрузки подарков: ${
+          error.message || "неизвестная ошибка"
+        }`
+      );
+    } else {
+      setGifts(data || []);
     }
 
+    setGiftsLoading(false);
+  }
+
+  useEffect(() => {
     loadGifts();
+  }, []);
+
+  /* =========================
+     REALTIME GIFTS
+  ========================= */
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("birthday-gifts-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "gifts",
+        },
+        () => {
+          loadGifts();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   /* =========================
@@ -118,17 +183,23 @@ export default function Home() {
     const cleanName = name.trim();
 
     if (!cleanName) {
-      setRsvpError("Пожалуйста, напишите своё имя.");
+      setRsvpError(
+        "Пожалуйста, напишите своё имя."
+      );
       return;
     }
 
     if (!attending) {
-      setRsvpError("Пожалуйста, выберите, будете ли вы.");
+      setRsvpError(
+        "Пожалуйста, выберите, будете ли вы."
+      );
       return;
     }
 
     if (attending === "yes" && !alcohol) {
-      setRsvpError("Пожалуйста, выберите напиток.");
+      setRsvpError(
+        "Пожалуйста, выберите напиток."
+      );
       return;
     }
 
@@ -137,7 +208,9 @@ export default function Home() {
       alcohol === "Свой вариант" &&
       !customAlcohol.trim()
     ) {
-      setRsvpError("Напишите свой вариант напитка.");
+      setRsvpError(
+        "Напишите свой вариант напитка."
+      );
       return;
     }
 
@@ -153,20 +226,26 @@ export default function Home() {
         : alcohol;
 
     const finalCustomAlcohol =
-      attending === "yes" && alcohol === "Свой вариант"
+      attending === "yes" &&
+      alcohol === "Свой вариант"
         ? customAlcohol.trim()
         : null;
 
-    const { error } = await supabase.from("guests").insert({
-      id: newGuestId,
-      name: cleanName,
-      attending,
-      alcohol: finalAlcohol,
-      custom_alcohol: finalCustomAlcohol,
-    });
+    const { error } = await supabase
+      .from("guests")
+      .insert({
+        id: newGuestId,
+        name: cleanName,
+        attending,
+        alcohol: finalAlcohol,
+        custom_alcohol: finalCustomAlcohol,
+      });
 
     if (error) {
-      console.error(error);
+      console.error(
+        "RSVP ERROR:",
+        error
+      );
 
       setRsvpError(
         "Не получилось сохранить ответ. Попробуйте ещё раз."
@@ -176,7 +255,11 @@ export default function Home() {
       return;
     }
 
-    localStorage.setItem("birthday_guest_id", newGuestId);
+    localStorage.setItem(
+      "birthday_guest_id",
+      newGuestId
+    );
+
     setGuestId(newGuestId);
 
     setRsvpSuccess(true);
@@ -193,7 +276,10 @@ export default function Home() {
     let currentGuestId = guestId;
 
     if (!currentGuestId) {
-      currentGuestId = localStorage.getItem("birthday_guest_id");
+      currentGuestId =
+        localStorage.getItem(
+          "birthday_guest_id"
+        );
     }
 
     if (!currentGuestId) {
@@ -203,23 +289,32 @@ export default function Home() {
 
       document
         .querySelector(".rsvp-section")
-        ?.scrollIntoView({ behavior: "smooth" });
+        ?.scrollIntoView({
+          behavior: "smooth",
+        });
 
       return;
     }
 
     setReservingGiftId(giftId);
 
-    const { data, error } = await supabase.rpc("reserve_gift", {
-      p_gift_id: giftId,
-      p_guest_id: currentGuestId,
-    });
+    const { data, error } =
+      await supabase.rpc(
+        "reserve_gift",
+        {
+          p_gift_id: giftId,
+          p_guest_id: currentGuestId,
+        }
+      );
 
     if (error) {
-      console.error(error);
+      console.error(
+        "RESERVE GIFT ERROR:",
+        error
+      );
 
       setGiftError(
-        "Не удалось забронировать подарок. Попробуйте ещё раз."
+        `Не удалось забронировать подарок: ${error.message}`
       );
 
       setReservingGiftId(null);
@@ -230,9 +325,19 @@ export default function Home() {
       setGifts((currentGifts) =>
         currentGifts.map((gift) =>
           gift.id === giftId
-            ? { ...gift, is_reserved: true }
+            ? {
+                ...gift,
+                is_reserved: true,
+              }
             : gift
         )
+      );
+
+      setMyReservedGiftIds(
+        (current) =>
+          current.includes(giftId)
+            ? current
+            : [...current, giftId]
       );
 
       setGiftError("");
@@ -241,29 +346,98 @@ export default function Home() {
         "Этот подарок уже забронировал кто-то другой. Выберите другой подарок."
       );
 
-      /* Обновляем список из базы */
-      const { data: freshGifts } = await supabase
-        .from("gifts")
-        .select("id, name, description, image_url, is_reserved")
-        .order("created_at", { ascending: true });
-
-      if (freshGifts) {
-        setGifts(freshGifts);
-      }
+      await loadGifts();
     }
 
     setReservingGiftId(null);
   }
 
   /* =========================
-     GROUP GIFTS
+     CANCEL GIFT
   ========================= */
+async function cancelGift(giftId: string) {
+  setGiftError("");
 
-  const giftGroups = giftGroupInfo.map((group, index) => ({
+  const currentGuestId =
+    guestId || localStorage.getItem("birthday_guest_id");
+
+  if (!currentGuestId) {
+    setGiftError(
+      "Не удалось определить гостя. Пожалуйста, подтвердите присутствие ещё раз."
+    );
+    return;
+  }
+
+  const confirmed = window.confirm(
+    "Отменить бронирование этого подарка?"
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  setCancelingGiftId(giftId);
+
+  const { data, error } = await supabase.rpc("cancel_gift", {
+    p_gift_id: giftId,
+    p_guest_id: currentGuestId,
+  });
+
+  if (error) {
+    console.error("CANCEL GIFT ERROR:", error);
+
+    setGiftError(
+      `Не удалось отменить бронирование: ${error.message}`
+    );
+
+    setCancelingGiftId(null);
+    return;
+  }
+
+  if (data === true) {
+    setGifts((currentGifts) =>
+      currentGifts.map((gift) =>
+        gift.id === giftId
+          ? {
+              ...gift,
+              is_reserved: false,
+            }
+          : gift
+      )
+    );
+
+    setMyReservedGiftIds((current) =>
+      current.filter((id) => id !== giftId)
+    );
+
+    setGiftError("");
+  } else {
+    setGiftError(
+      "Это бронирование не найдено или уже было отменено."
+    );
+
+    await loadMyReservedGifts(currentGuestId);
+    await loadGifts();
+  }
+
+  setCancelingGiftId(null);
+}
+
+/* =========================
+   GROUP GIFTS
+========================= */
+
+const giftGroups = giftGroupInfo.map(
+  (group, index) => ({
     ...group,
-    gifts: gifts.slice(index * 5, index * 5 + 5),
-  }));
+    gifts: gifts.slice(
+      index * 5,
+      index * 5 + 5
+    ),
+  })
+);
 
+ 
   return (
     <main className="birthday-site">
 
@@ -287,11 +461,15 @@ export default function Home() {
         </div>
 
         <div className="hero-name">
-          <div className="age">19</div>
+
+          <div className="age">
+            19
+          </div>
 
           <div className="name">
             Karina
           </div>
+
         </div>
 
         <div className="hero-date">
@@ -303,6 +481,7 @@ export default function Home() {
         <div className="info-card">
 
           <div className="info-item">
+
             <div className="info-label">
               ДАТА
             </div>
@@ -310,9 +489,11 @@ export default function Home() {
             <div className="info-value">
               4 ноября 2026
             </div>
+
           </div>
 
           <div className="info-item">
+
             <div className="info-label">
               НАЧАЛО
             </div>
@@ -320,9 +501,11 @@ export default function Home() {
             <div className="info-value">
               19:00
             </div>
+
           </div>
 
           <div className="info-item">
+
             <div className="info-label">
               МЕСТО
             </div>
@@ -332,9 +515,11 @@ export default function Home() {
               <br />
               "Венеция"
             </div>
+
           </div>
 
           <div className="info-item">
+
             <div className="info-label">
               АДРЕС
             </div>
@@ -342,6 +527,7 @@ export default function Home() {
             <div className="info-value">
               М.Батыра 11/9
             </div>
+
           </div>
 
         </div>
@@ -358,12 +544,16 @@ export default function Home() {
       ========================= */}
 
       <section className="photo-section">
+
         <div className="full-photo">
+
           <img
             src="/images/photo2.jpg"
             alt=""
           />
+
         </div>
+
       </section>
 
 
@@ -386,9 +576,10 @@ export default function Home() {
           </h2>
 
           <p>
-            Хочу собрать рядом самых любимых
-            людей и просто наслаждаться этим
-            вечером вместе с вами.
+            Хочу собрать рядом самых
+            любимых людей и просто
+            наслаждаться этим вечером
+            вместе с вами.
           </p>
 
           <div className="decor-line">
@@ -405,12 +596,16 @@ export default function Home() {
       ========================= */}
 
       <section className="photo-section">
+
         <div className="full-photo">
+
           <img
             src="/images/photo3.jpg"
             alt=""
           />
+
         </div>
+
       </section>
 
 
@@ -421,10 +616,12 @@ export default function Home() {
       <section className="dress-section">
 
         <div className="dress-photo">
+
           <img
             src="/images/photo4.jpg"
             alt=""
           />
+
         </div>
 
         <div className="dress-card">
@@ -434,8 +631,9 @@ export default function Home() {
           </div>
 
           <p>
-            В этот вечер хочется видеть вас
-            в моем любимом цвете
+            В этот вечер хочется
+            видеть вас в моем
+            любимом цвете
           </p>
 
         </div>
@@ -451,13 +649,6 @@ export default function Home() {
             вечерний стиль
           </div>
 
-        </div>
-
-        <div className="dress-photo bottom-photo">
-          <img
-            src="/images/photo5.jpg"
-            alt=""
-          />
         </div>
 
       </section>
@@ -488,7 +679,9 @@ export default function Home() {
             type="text"
             placeholder="Ваше имя"
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) =>
+              setName(e.target.value)
+            }
           />
 
           <div className="question">
@@ -500,9 +693,13 @@ export default function Home() {
             <button
               type="button"
               className={`choice-button ${
-                attending === "yes" ? "selected" : ""
+                attending === "yes"
+                  ? "selected"
+                  : ""
               }`}
-              onClick={() => setAttending("yes")}
+              onClick={() =>
+                setAttending("yes")
+              }
             >
               Да, конечно
             </button>
@@ -510,7 +707,9 @@ export default function Home() {
             <button
               type="button"
               className={`choice-button ${
-                attending === "no" ? "selected" : ""
+                attending === "no"
+                  ? "selected"
+                  : ""
               }`}
               onClick={() => {
                 setAttending("no");
@@ -524,94 +723,111 @@ export default function Home() {
           </div>
 
 
-         {/* =========================
-    ALCOHOL
-========================= */}
+          {/* =========================
+              ALCOHOL
+          ========================= */}
 
-<div className="question alcohol-question">
-  Какой алкогольный напиток
-  <br />
-  предпочитаете?
-</div>
+          <div className="question alcohol-question">
 
-<div className="choice-group">
+            Какой алкогольный напиток
+            <br />
+            предпочитаете?
 
-  <button
-    type="button"
-    className={`choice-button ${
-      alcohol === "Коньяк" ? "selected" : ""
-    }`}
-    onClick={() => {
-      setAlcohol("Коньяк");
-      setCustomAlcohol("");
-    }}
-  >
-    Коньяк
-  </button>
+          </div>
 
-  <button
-    type="button"
-    className={`choice-button ${
-      alcohol === "Водка" ? "selected" : ""
-    }`}
-    onClick={() => {
-      setAlcohol("Водка");
-      setCustomAlcohol("");
-    }}
-  >
-    Водка
-  </button>
+          <div className="choice-group">
 
-  <button
-    type="button"
-    className={`choice-button ${
-      alcohol === "Вино" ? "selected" : ""
-    }`}
-    onClick={() => {
-      setAlcohol("Вино");
-      setCustomAlcohol("");
-    }}
-  >
-    Вино
-  </button>
+            <button
+              type="button"
+              className={`choice-button ${
+                alcohol === "Коньяк"
+                  ? "selected"
+                  : ""
+              }`}
+              onClick={() => {
+                setAlcohol("Коньяк");
+                setCustomAlcohol("");
+              }}
+            >
+              Коньяк
+            </button>
 
-  <button
-    type="button"
-    className={`choice-button ${
-      alcohol === "Не употребляю" ? "selected" : ""
-    }`}
-    onClick={() => {
-      setAlcohol("Не употребляю");
-      setCustomAlcohol("");
-    }}
-  >
-    Не употребляю
-  </button>
+            <button
+              type="button"
+              className={`choice-button ${
+                alcohol === "Водка"
+                  ? "selected"
+                  : ""
+              }`}
+              onClick={() => {
+                setAlcohol("Водка");
+                setCustomAlcohol("");
+              }}
+            >
+              Водка
+            </button>
 
-  <button
-    type="button"
-    className={`choice-button ${
-      alcohol === "Свой вариант" ? "selected" : ""
-    }`}
-    onClick={() => {
-      setAlcohol("Свой вариант");
-    }}
-  >
-    Свой вариант
-  </button>
+            <button
+              type="button"
+              className={`choice-button ${
+                alcohol === "Вино"
+                  ? "selected"
+                  : ""
+              }`}
+              onClick={() => {
+                setAlcohol("Вино");
+                setCustomAlcohol("");
+              }}
+            >
+              Вино
+            </button>
 
-</div>
+            <button
+              type="button"
+              className={`choice-button ${
+                alcohol === "Не употребляю"
+                  ? "selected"
+                  : ""
+              }`}
+              onClick={() => {
+                setAlcohol(
+                  "Не употребляю"
+                );
+                setCustomAlcohol("");
+              }}
+            >
+              Не употребляю
+            </button>
 
-{alcohol === "Свой вариант" && (
-  <input
-    className="custom-input"
-    type="text"
-    placeholder="Напишите свой вариант"
-    value={customAlcohol}
-    onChange={(e) => setCustomAlcohol(e.target.value)}
-  />
-)}
+            <button
+              type="button"
+              className={`choice-button ${
+                alcohol === "Свой вариант"
+                  ? "selected"
+                  : ""
+              }`}
+              onClick={() =>
+                setAlcohol("Свой вариант")
+              }
+            >
+              Свой вариант
+            </button>
 
+          </div>
+
+          {alcohol === "Свой вариант" && (
+            <input
+              className="custom-input"
+              type="text"
+              placeholder="Напишите свой вариант"
+              value={customAlcohol}
+              onChange={(e) =>
+                setCustomAlcohol(
+                  e.target.value
+                )
+              }
+            />
+          )}
 
           {/* ERROR */}
 
@@ -621,15 +837,14 @@ export default function Home() {
             </div>
           )}
 
-
           {/* SUCCESS */}
 
           {rsvpSuccess && (
             <div className="form-message success-message">
-              Спасибо, {name}! Ваш ответ сохранён 🤍
+              Спасибо, {name}! Ваш ответ
+              сохранён 🤍
             </div>
           )}
-
 
           <button
             type="button"
@@ -643,8 +858,9 @@ export default function Home() {
           </button>
 
           <div className="privacy-text">
-            Ваш ответ только для организации вечера
-            и поможет учесть предпочтения гостей
+            Ваш ответ только для организации
+            вечера и поможет учесть
+            предпочтения гостей
           </div>
 
         </div>
@@ -670,26 +886,26 @@ export default function Home() {
 
           <p>
             Дорогие мои, если вы задумываетесь
-            о подарке, я буду очень рада денежному
-            подарку — так я смогу сама выбрать то,
-            что действительно хочется и будет
-            радовать меня. 🤍
+            о подарке, я буду очень рада
+            денежному подарку — так я смогу
+            сама выбрать то, что действительно
+            хочется и будет радовать меня. 🤍
           </p>
 
           <p>
             А если вам захочется дополнить его
             чем-то особенным, ниже я оставила
             небольшой вишлист. Выбирать что-то
-            из него совсем не обязательно — это
-            лишь для тех, кому хочется сделать
-            приятное дополнение.
+            из него совсем не обязательно —
+            это лишь для тех, кому хочется
+            сделать приятное дополнение.
           </p>
 
           <p>
             Если выберете подарок из списка,
             пожалуйста, отметьте его — он
-            забронируется за вами, чтобы подарки
-            не повторялись. ✨
+            забронируется за вами, чтобы
+            подарки не повторялись. ✨
           </p>
 
         </div>
@@ -739,19 +955,30 @@ export default function Home() {
 
             </div>
 
-
             <div className="gifts-grid">
 
               {group.gifts.map((gift) => {
 
-                const isReserved = gift.is_reserved;
+                const isReserved =
+                  gift.is_reserved;
+
+                const isMine =
+                  myReservedGiftIds.includes(
+                    gift.id
+                  );
+
                 const isReserving =
                   reservingGiftId === gift.id;
+
+                const isCanceling =
+                  cancelingGiftId === gift.id;
 
                 return (
                   <div
                     className={`gift-card ${
-                      isReserved ? "reserved" : ""
+                      isReserved
+                        ? "reserved"
+                        : ""
                     }`}
                     key={gift.id}
                   >
@@ -781,7 +1008,25 @@ export default function Home() {
                         {gift.description}
                       </div>
 
-                      {isReserved ? (
+                      {isReserved &&
+                      isMine ? (
+
+                        <button
+                          type="button"
+                          className="gift-button reserved-button"
+                          disabled={
+                            isCanceling
+                          }
+                          onClick={(event) =>
+  cancelGift(gift.id)
+}
+                        >
+                          {isCanceling
+                            ? "Отменяем..."
+                            : "Отменить бронирование"}
+                        </button>
+
+                      ) : isReserved ? (
 
                         <button
                           type="button"
@@ -796,9 +1041,13 @@ export default function Home() {
                         <button
                           type="button"
                           className="gift-button"
-                          disabled={isReserving}
+                          disabled={
+                            isReserving
+                          }
                           onClick={() =>
-                            reserveGift(gift.id)
+                            reserveGift(
+                              gift.id
+                            )
                           }
                         >
                           {isReserving
@@ -829,10 +1078,12 @@ export default function Home() {
       <section className="photo-section">
 
         <div className="full-photo">
+
           <img
             src="/images/photo6.jpg"
             alt=""
           />
+
         </div>
 
       </section>
@@ -877,17 +1128,12 @@ export default function Home() {
       <section className="final-section">
 
         <div className="final-photo">
-          <img
-            src="/images/photo5.jpg"
-            alt=""
-          />
-        </div>
 
-        <div className="final-photo">
           <img
-            src="/images/photo6.jpg"
+            src="/images/photo8.jpg"
             alt=""
           />
+
         </div>
 
         <div className="final-card">

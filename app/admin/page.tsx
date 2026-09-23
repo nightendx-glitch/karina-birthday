@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import DeleteGuestButton from "./DeleteGuestButton";
-
+import AdminRealtime from "./AdminRealtime";
 export default async function AdminPage() {
   const supabase = await createClient();
 
@@ -69,6 +69,7 @@ export default async function AdminPage() {
         fontFamily: "Arial, sans-serif",
       }}
     >
+      <AdminRealtime />
       <div
         style={{
           maxWidth: "1100px",
