@@ -915,159 +915,132 @@ const giftGroups = giftGroupInfo.map(
       </section>
 
 
-      {/* =========================
-          GIFTS
-      ========================= */}
+     {/* =========================
+    GIFTS
+========================= */}
 
-      {giftError && (
-        <div className="gift-global-message">
-          {giftError}
+{giftError && (
+  <div className="gift-global-message">
+    {giftError}
+  </div>
+)}
+
+{giftsLoading ? (
+  <section className="gift-loading">
+    Загружаем список подарков...
+  </section>
+) : (
+  giftGroups.map((group) => (
+    <section
+      className="gift-section"
+      key={group.number}
+    >
+      <div className="gift-section-heading">
+        <div className="gift-number">
+          {group.number}
         </div>
-      )}
 
-      {giftsLoading ? (
-        <section className="gift-loading">
-          Загружаем список подарков...
-        </section>
-      ) : (
-        giftGroups.map((group) => (
+        <div className="gift-section-title">
+          {group.title}
+        </div>
 
-          <section
-            className="gift-section"
-            key={group.number}
-          >
+        <div className="gift-section-subtitle">
+          {group.subtitle}
+        </div>
+      </div>
 
-            <div className="gift-section-heading">
+      <div className="gifts-grid">
+        {group.gifts.map((gift) => {
+          const isReserved = gift.is_reserved;
 
-              <div className="gift-number">
-                {group.number}
+          const isMine =
+            myReservedGiftIds.includes(gift.id);
+
+          const isReserving =
+            reservingGiftId === gift.id;
+
+          const isCanceling =
+            cancelingGiftId === gift.id;
+
+          return (
+            <div
+              className={`gift-card ${
+                isReserved ? "reserved" : ""
+              }`}
+              key={gift.id}
+            >
+              <div className="gift-image">
+                <img
+                  src={gift.image_url}
+                  alt={gift.name}
+                />
+
+                <div className="gift-number-badge">
+                  {String(
+                    gifts.indexOf(gift) + 1
+                  ).padStart(2, "0")}
+                </div>
               </div>
 
-              <div className="gift-section-title">
-                {group.title}
-              </div>
+              <div className="gift-content">
+                <div className="gift-name">
+                  {gift.name}
+                </div>
 
-              <div className="gift-section-subtitle">
-                {group.subtitle}
-              </div>
+                <div className="gift-description">
+                  {gift.description}
+                </div>
 
-            </div>
-
-            <div className="gifts-grid">
-
-              {group.gifts.map((gift) => {
-
-                const isReserved =
-                  gift.is_reserved;
-
-                const isMine =
-                  myReservedGiftIds.includes(
-                    gift.id
-                  );
-
-                const isReserving =
-                  reservingGiftId === gift.id;
-
-                const isCanceling =
-                  cancelingGiftId === gift.id;
-
-                return (
-                  <div
-                    className={`gift-card ${
-                      isReserved
-                        ? "reserved"
-                        : ""
-                    }`}
-                    key={gift.id}
+                {/* МОЙ ЗАБРОНИРОВАННЫЙ ПОДАРОК */}
+                {isReserved && isMine ? (
+                  <button
+                    type="button"
+                    className="gift-button cancel-button"
+                    disabled={isCanceling}
+                    onClick={() =>
+                      cancelGift(gift.id)
+                    }
                   >
+                    {isCanceling
+                      ? "Отменяем..."
+                      : "Отменить бронирование"}
+                  </button>
 
-                    <div className="gift-image">
+                ) : /* ЧУЖОЙ ЗАБРОНИРОВАННЫЙ ПОДАРОК */
 
-                      <img
-                        src={gift.image_url}
-                        alt={gift.name}
-                      />
+                isReserved ? (
+                  <button
+                    type="button"
+                    className="gift-button reserved-button"
+                    disabled
+                  >
+                    Забронировано
+                  </button>
 
-                      <div className="gift-number-badge">
-                        {String(
-                          gifts.indexOf(gift) + 1
-                        ).padStart(2, "0")}
-                      </div>
+                ) : /* СВОБОДНЫЙ ПОДАРОК */
 
-                    </div>
-
-                    <div className="gift-content">
-
-                      <div className="gift-name">
-                        {gift.name}
-                      </div>
-
-                      <div className="gift-description">
-                        {gift.description}
-                      </div>
-
-                      {isReserved &&
-                      isMine ? (
-
-                        <button
-                          type="button"
-                          className="gift-button reserved-button"
-                          disabled={
-                            isCanceling
-                          }
-                          onClick={(event) =>
-  cancelGift(gift.id)
-}
-                        >
-                          {isCanceling
-                            ? "Отменяем..."
-                            : "Отменить бронирование"}
-                        </button>
-
-                      ) : isReserved ? (
-
-                        <button
-                          type="button"
-                          className="gift-button reserved-button"
-                          disabled
-                        >
-                          Забронировано
-                        </button>
-
-                      ) : (
-
-                        <button
-                          type="button"
-                          className="gift-button"
-                          disabled={
-                            isReserving
-                          }
-                          onClick={() =>
-                            reserveGift(
-                              gift.id
-                            )
-                          }
-                        >
-                          {isReserving
-                            ? "Бронируем..."
-                            : "Забронировать подарок"}
-                        </button>
-
-                      )}
-
-                    </div>
-
-                  </div>
-                );
-              })}
-
+                (
+                  <button
+                    type="button"
+                    className="gift-button"
+                    disabled={isReserving}
+                    onClick={() =>
+                      reserveGift(gift.id)
+                    }
+                  >
+                    {isReserving
+                      ? "Бронируем..."
+                      : "Забронировать подарок"}
+                  </button>
+                )}
+              </div>
             </div>
-
-          </section>
-
-        ))
-      )}
-
+          );
+        })}
+      </div>
+    </section>
+  ))
+)}
 
       {/* =========================
           PHOTO AFTER WISHLIST
