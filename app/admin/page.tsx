@@ -372,7 +372,12 @@ if (
                                 "18px 16px",
                             }}
                           >
-                            {attendanceText}
+                           <div>
+  <div>{attendanceText}</div>
+  <small style={{ opacity: 0.5 }}>
+    DB: [{String(guest.attending)}]
+  </small>
+</div>
                           </td>
 
                           {/* =========================
