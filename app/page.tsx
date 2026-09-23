@@ -146,11 +146,12 @@ export default function Home() {
     loadGifts();
   }, []);
 
-  /* =========================
-     REALTIME GIFTS
-  ========================= */
-
  
+ 
+
+/* =========================
+   REALTIME GIFTS
+========================= */
 
 useEffect(() => {
   const channel = supabase
@@ -158,12 +159,24 @@ useEffect(() => {
     .on(
       "postgres_changes",
       {
-        event: "*",
+        event: "UPDATE",
         schema: "public",
         table: "gifts",
       },
-      () => {
-        loadGifts();
+      (payload) => {
+        const updatedGift = payload.new as Gift;
+
+        setGifts((currentGifts) =>
+          currentGifts.map((gift) =>
+            gift.id === updatedGift.id
+              ? {
+                  ...gift,
+                  is_reserved:
+                    updatedGift.is_reserved,
+                }
+              : gift
+          )
+        );
       }
     )
     .subscribe();
@@ -172,100 +185,6 @@ useEffect(() => {
     supabase.removeChannel(channel);
   };
 }, []);
-
-  /* =========================
-     RSVP
-  ========================= */
-
-  async function handleRsvp() {
-    setRsvpError("");
-    setRsvpSuccess(false);
-
-    const cleanName = name.trim();
-
-    if (!cleanName) {
-      setRsvpError(
-        "Пожалуйста, напишите своё имя."
-      );
-      return;
-    }
-
-    if (!attending) {
-      setRsvpError(
-        "Пожалуйста, выберите, будете ли вы."
-      );
-      return;
-    }
-
-    if (attending === "yes" && !alcohol) {
-      setRsvpError(
-        "Пожалуйста, выберите напиток."
-      );
-      return;
-    }
-
-    if (
-      attending === "yes" &&
-      alcohol === "Свой вариант" &&
-      !customAlcohol.trim()
-    ) {
-      setRsvpError(
-        "Напишите свой вариант напитка."
-      );
-      return;
-    }
-
-    setRsvpLoading(true);
-
-    const newGuestId = crypto.randomUUID();
-
-    const finalAlcohol =
-      attending === "no"
-        ? null
-        : alcohol === "Свой вариант"
-        ? "Свой вариант"
-        : alcohol;
-
-    const finalCustomAlcohol =
-      attending === "yes" &&
-      alcohol === "Свой вариант"
-        ? customAlcohol.trim()
-        : null;
-
-    const { error } = await supabase
-      .from("guests")
-      .insert({
-        id: newGuestId,
-        name: cleanName,
-        attending,
-        alcohol: finalAlcohol,
-        custom_alcohol: finalCustomAlcohol,
-      });
-
-    if (error) {
-      console.error(
-        "RSVP ERROR:",
-        error
-      );
-
-      setRsvpError(
-        "Не получилось сохранить ответ. Попробуйте ещё раз."
-      );
-
-      setRsvpLoading(false);
-      return;
-    }
-
-    localStorage.setItem(
-      "birthday_guest_id",
-      newGuestId
-    );
-
-    setGuestId(newGuestId);
-
-    setRsvpSuccess(true);
-    setRsvpLoading(false);
-  }
 
   /* =========================
    RESERVE GIFT
